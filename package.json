@@ -1,5 +1,9 @@
 {
   "name": "restaurant-booking-system",
+  "groupMembers": [
+    "ChenHiuChung"
+   
+  ],
   "version": "1.0.0",
   "description": "COMP3810SEF group project - restaurant reservation system",
   "main": "server.js",
