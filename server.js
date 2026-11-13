@@ -1,70 +1,53 @@
-const { MongoClient } = require('mongodb');
-const url = ""; 
+const express = require('express');
+const session = require('cookie-session');
+const { MongoClient, ObjectId } = require('mongodb');
+
+const app = express();
+const url = "";
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-const findUserByUsername = async (db, username) => {
-  var collection = db.collection('users');
-  var results = await collection.findOne({ username: username });
-  return results;
+app.use(session({
+    name: 'session',
+    keys: ['secret-key-1', 'secret-key-2'],
+    maxAge: 24 * 60 * 60 * 1000 
+}));
+
+const isLoggedIn = (req, res, next) => {
+    if (req.session.authenticated) return next();
+    res.redirect('/login');
 };
 
-const insertReservation = async (db, reservationObj) => {
-  var collection = db.collection('reservations');
-  var results = await collection.insertOne(reservationObj);
-  return results;
-};
+const getDb = () => client.db(dbName);
 
-const findReservationsByUserId = async (db, userId) => {
-  var collection = db.collection('reservations');
-  var results = await collection.find({ userId: userId }).toArray();
-  return results;
-};
-
-const findOneReservationById = async (db, resId) => {
-  var collection = db.collection('reservations');
-  var results = await collection.findOne({ _id: resId });
-  return results;
-};
-
-const updateReservation = async (db, resId, updateObj) => {
-  var collection = db.collection('reservations');
-  var results = await collection.updateOne(
-    { _id: resId },
-    { $set: updateObj }
-  );
-  return results;
-};
-
-const deleteReservation = async (db, resId) => {
-  var collection = db.collection('reservations');
-  var results = await collection.deleteOne({ _id: resId });
-  return results;
-};
-
-const findAllReservations = async (db) => {
-  var collection = db.collection('reservations');
-  var results = await collection.find({}).toArray();
-  return results;
-};
-
-async function main() {
-    await client.connect();
-    console.log("Connected successfully to server");
-    const db = client.db(dbName);
-
-    // test example
-    const user = await findUserByUsername(db, "staff01");
-    console.log("Found user >>>", user);
-
-    if(user) {
-      const bookings = await findReservationsByUserId(db, user._id);
-      console.log("Staff01 bookings >>>", bookings);
-    }
+async function findUserByUsername(username) {
+    return await getDb().collection('users').findOne({ username: username });
 }
 
-main()
-  .then(console.log("Running your MongoDB-driver!"))
-  .catch(console.error)
-  .finally(() => client.close());
+async function insertReservation(reservationObj) {
+    return await getDb().collection('reservations').insertOne(reservationObj);
+}
+
+async function findAllReservations() {
+    return await getDb().collection('reservations').find({}).toArray();
+}
+
+async function findOneReservationById(resId) {
+    return await getDb().collection('reservations').findOne({ _id: new ObjectId(resId) });
+}
+
+async function updateReservation(resId, updateObj) {
+    return await getDb().collection('reservations').updateOne(
+        { _id: new ObjectId(resId) },
+        { $set: updateObj }
+    );
+}
+
+async function deleteReservation(resId) {
+    return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
+}
+
