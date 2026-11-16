@@ -3,13 +3,15 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "";
+const url = "mongodb+srv://hkmu:323911Abc@cluster0.wgy93zk.mongodb.net/";
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.use(express.static('public'));
 
 app.use(session({
     name: 'session',
@@ -55,7 +57,9 @@ async function deleteReservation(resId) {
 
 
 
-
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
+});
 
 
 
