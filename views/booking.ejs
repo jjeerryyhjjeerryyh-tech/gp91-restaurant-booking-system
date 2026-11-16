@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'ÉCLAT | Contemporary French Cuisine - Online Reservation System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cormorant Garamond (Luxury Serif) & Inter (Clean Sans-Serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#fbf8f1',
+                            100: '#f5eedc',
+                            200: '#eadab8',
+                            300: '#dec08d',
+                            400: '#d0a361',
+                            500: '#c58f42',
+                            600: '#b07634',
+                            700: '#8f5b2c',
+                        },
+                        obsidian: '#121316',
+                        charcoal: '#1c1e22',
+                        alabaster: '#f9f8f6'
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f8f6;
+            color: #121316;
+        }
+        .font-luxury {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d0a361;
+            border-radius: 3px;
+        }
+        .step-active {
+            border-color: #b07634;
+            color: #121316;
+            font-weight: 600;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 30px -5px rgba(18, 19, 22, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-gold-200 selection:text-obsidian">
+
+    <!-- Top Navigation Bar (Includes Login/Logout & CRUD Management Entry for COMP3810SEF) -->
+    <header class="sticky top-0 z-40 bg-alabaster/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('booking')">
+                <div class="w-10 h-10 rounded-full bg-obsidian text-gold-300 flex items-center justify-center font-luxury text-2xl tracking-wider border border-gold-400/40">
+                    L
+                </div>
+                <div>
+                    <span class="font-luxury text-2xl sm:text-3xl font-semibold tracking-widest text-obsidian block leading-none">L'ÉCLAT</span>
+                    <span class="text-[10px] tracking-[0.25em] uppercase text-stone-500 block mt-0.5">Fine Dining & Wine</span>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-stone-600">
+                <button onclick="switchTab('booking')" id="nav-booking" class="nav-btn text-obsidian border-b-2 border-gold-600 py-1 font-semibold transition-colors">Reservations</button>
+                <button onclick="switchTab('menu')" id="nav-menu" class="nav-btn hover:text-obsidian py-1 transition-colors">Culinary Showcase</button>
+                <button onclick="switchTab('location')" id="nav-location" class="nav-btn hover:text-obsidian py-1 transition-colors">Location & Contact</button>
+                <button onclick="switchTab('manage')" id="nav-manage" class="nav-btn hover:text-obsidian py-1 transition-colors flex items-center gap-1.5">
+                    <span>My Bookings (CRUD)</span>
+                    <span id="booking-count-badge" class="bg-gold-100 text-gold-700 text-xs px-2 py-0.5 rounded-full font-semibold">2</span>
+                </button>
+            </nav>
+
+            <!-- User Authentication Status (Meets COMP3810SEF Login/Logout Requirement) -->
+            <div class="flex items-center space-x-4">
+                <div id="user-logged-in" class="flex items-center space-x-3 bg-white px-3.5 py-1.5 rounded-full border border-stone-200 shadow-sm">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <span class="text-xs font-medium text-stone-700" id="current-username">David Chan (VIP)</span>
+                    <button onclick="toggleLoginModal()" class="text-xs text-stone-400 hover:text-red-600 transition-colors ml-2" title="Logout / Switch Account">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-obsidian p-2 rounded-lg hover:bg-stone-200/50">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Dropdown Navigation -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-stone-200 px-4 pt-2 pb-4 space-y-2">
+            <button onclick="switchTab('booking'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium bg-gold-50 text-gold-700">Reservations</button>
+            <button onclick="switchTab('menu'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">Culinary Showcase</button>
+            <button onclick="switchTab('location'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">Location & Contact</button>
+            <button onclick="switchTab('manage'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">My Bookings (CRUD)</button>
+        </div>
+    </header>
+
+    <!-- Minimalist Hero Banner -->
+    <section class="relative bg-obsidian text-alabaster overflow-hidden py-12 sm:py-16 border-b border-gold-600/20">
+        <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#d0a361_1px,transparent_1px)] [background-size:24px_24px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-400/30 text-gold-300 text-xs tracking-widest uppercase mb-3">
+                    <i class="fa-solid fa-star text-[10px]"></i> Michelin Guide Selected 2026
+                </div>
+                <h1 class="font-luxury text-3xl sm:text-5xl font-normal tracking-wide text-white">
+                    A Symphony of Light & French Gastronomy
+                </h1>
+                <p class="text-stone-400 text-sm sm:text-base mt-2 max-w-2xl font-light">
+                    Perched high above Central Hong Kong, our culinary team crafts seasonal French delicacies with modern artistry. Select your preferred time and table below.
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
+                <button onclick="switchTab('menu')" class="px-5 py-2.5 rounded-lg border border-stone-600 hover:border-gold-400 text-stone-200 hover:text-gold-300 text-xs tracking-widest uppercase transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-utensils"></i> View Dishes
+                </button>
+                <button onclick="openInquiryModal()" class="px-5 py-2.5 rounded-lg bg-gold-600/20 border border-gold-500/40 text-gold-300 hover:bg-gold-600 hover:text-white text-xs tracking-widest uppercase transition-all flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-comment-dots"></i> Contact Concierge
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <!-- ==================== TAB 1: Online Reservation Flow (4 Steps) ==================== -->
+        <div id="tab-booking" class="space-y-8">
+            
+            <!-- Progress Stepper -->
+            <div class="max-w-3xl mx-auto">
+                <div class="grid grid-cols-4 gap-2 sm:gap-4">
+                    <div id="step-ind-1" class="border-t-2 border-gold-600 pt-3 transition-all">
+                        <span class="text-[11px] uppercase tracking-widest text-gold-600 font-semibold block">Step 01</span>
+                        <span class="text-xs sm:text-sm font-medium text-obsidian mt-0.5 block">Table & Time</span>
+                    </div>
+                    <div id="step-ind-2" class="border-t-2 border-stone-200 pt-3 transition-all">
+                        <span class="text-[11px] uppercase tracking-widest text-stone-400 font-semibold block">Step 02</span>
+                        <span class="text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block">Guest Details</span>
+                    </div>
+                    <div id="step-ind-3" class="border-t-2 border-stone-200 pt-3 transition-all">
+                        <span class="text-[11px] uppercase tracking-widest text-stone-400 font-semibold block">Step 03</span>
+                        <span class="text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block">Review & Payment</span>
+                    </div>
+                    <div id="step-ind-4" class="border-t-2 border-stone-200 pt-3 transition-all">
+                        <span class="text-[11px] uppercase tracking-widest text-stone-400 font-semibold block">Step 04</span>
+                        <span class="text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block">Confirmation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left/Main Column: Interactive Step Panels (8 Cols) -->
+                <div class="lg:col-span-8 bg-white rounded-2xl border border-stone-200/80 p-6 sm:p-8 card-shadow">
+                    
+                    <!-- [STEP 1: Select Guests, Date, Time, and Seating Zone] -->
+                    <div id="booking-step-1" class="space-y-8">
+                        <div class="border-b border-stone-100 pb-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="font-luxury text-2xl sm:text-3xl font-semibold text-obsidian">Reserve Your Table</h2>
+                                <p class="text-xs sm:text-sm text-stone-500 mt-1">Select party size, date, dining session, and your preferred seating area</p>
+                            </div>
+                            <span class="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">Live Availability</span>
+                        </div>
+
+                        <!-- 1. Party Size Selection -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-3">
+                                <i class="fa-solid fa-user-group mr-1.5 text-gold-600"></i> 1. Number of Guests
+                            </label>
+                            <div class="grid grid-cols-4 sm:grid-cols-8 gap-2.5" id="guest-selector">
+                                <!-- Dynamically generated buttons for 1-8 guests -->
+                            </div>
+                            <p class="text-[11px] text-stone-400 mt-2">* For private dining rooms or parties of 9 or more, please click "Contact Concierge" at the top right.</p>
+                        </div>
+
+                        <!-- 2. Date & Service Period Selection -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">
+                                    <i class="fa-regular fa-calendar mr-1.5 text-gold-600"></i> 2. Preferred Date
+                                </label>
+                                <input type="date" id="booking-date" onchange="updateSummary()" 
+                                    class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm font-medium text-obsidian bg-stone-50/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">
+                                    <i class="fa-regular fa-sun mr-1.5 text-gold-600"></i> Dining Session
+                                </label>
+                                <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-xl">
+                                    <button type="button" onclick="selectPeriod('lunch')" id="period-lunch" class="py-2.5 text-xs font-medium rounded-lg transition-all text-stone-600">
+                                        Lunch Service
+                                    </button>
+                                    <button type="button" onclick="selectPeriod('dinner')" id="period-dinner" class="py-2.5 text-xs font-medium rounded-lg transition-all bg-white text-obsidian shadow-sm">
+                                        Dinner Service
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Time Slot Selection -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-3">
+                                <i class="fa-regular fa-clock mr-1.5 text-gold-600"></i> 3. Select Time Slot
+                            </label>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="time-selector">
+                                <!-- Dynamically rendered time slot buttons -->
+                            </div>
+                        </div>
+
+                        <!-- 4. Seating Zone & Interactive Floor Plan -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold">
+                                    <i class="fa-solid fa-chair mr-1.5 text-gold-600"></i> 4. Select Seating Zone & Table
+                                </label>
+                                <span class="text-xs text-gold-700 font-medium">Select a zone card below</span>
+                            </div>
+
+                            <!-- Interactive Floor Plan Visualization -->
+                            <div class="bg-stone-900 text-stone-200 p-5 rounded-2xl mb-4 relative overflow-hidden border border-stone-800">
+                                <div class="flex items-center justify-between text-[11px] text-stone-400 border-b border-stone-800 pb-2 mb-4">
+                                    <span><i class="fa-solid fa-compass mr-1 text-gold-400"></i> Dining Room Floor Plan</span>
+                                    <div class="flex items-center gap-4">
+                                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gold-500 inline-block"></span> Selected</span>
+                                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-stone-700 border border-stone-500 inline-block"></span> Available</span>
+                                    </div>
+                                </div>
+
+                                <!-- Seating Zone Cards -->
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
+                                    <!-- Harbour View Window -->
+                                    <div onclick="selectSeat('Harbour View Window (Table W1)', 'window', 500)" id="seat-card-window" class="seat-option cursor-pointer p-3.5 rounded-xl border border-gold-500 bg-gold-500/10 transition-all text-left flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-semibold text-gold-300">Harbour View Window</span>
+                                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-300">Popular</span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-400 mt-1">Panoramic Victoria Harbour skyline views, ideal for celebrations</p>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-t border-stone-800 flex justify-between items-center text-[11px]">
+                                            <span class="text-stone-300">Tables: W1 - W4</span>
+                                            <span class="text-gold-400 font-medium">HK$500/guest</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Dining Room Booth -->
+                                    <div onclick="selectSeat('Main Dining Booth (Table M3)', 'main', 300)" id="seat-card-main" class="seat-option cursor-pointer p-3.5 rounded-xl border border-stone-700 bg-stone-800/60 hover:border-stone-500 transition-all text-left flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-semibold text-white">Main Dining Booth</span>
+                                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-stone-700 text-stone-300">Spacious</span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-400 mt-1">Elegant velvet banquets beneath crystal chandeliers</p>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-t border-stone-700/60 flex justify-between items-center text-[11px]">
+                                            <span class="text-stone-300">Tables: M1 - M8</span>
+                                            <span class="text-stone-300 font-medium">HK$300/guest</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Chef's Counter -->
+                                    <div onclick="selectSeat('Chef\'s Kitchen Counter (Seat C2)', 'counter', 500)" id="seat-card-counter" class="seat-option cursor-pointer p-3.5 rounded-xl border border-stone-700 bg-stone-800/60 hover:border-stone-500 transition-all text-left flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-semibold text-white">Chef's Counter</span>
+                                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-stone-700 text-stone-300">Interactive</span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-400 mt-1">Front-row seats to witness culinary artistry and plating</p>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-t border-stone-700/60 flex justify-between items-center text-[11px]">
+                                            <span class="text-stone-300">Seats: C1 - C6</span>
+                                            <span class="text-stone-300 font-medium">HK$500/guest</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Starlight Garden Terrace -->
+                                    <div onclick="selectSeat('Starlight Garden Terrace (Table T2)', 'terrace', 300)" id="seat-card-terrace" class="seat-option cursor-pointer p-3.5 rounded-xl border border-stone-700 bg-stone-800/60 hover:border-stone-500 transition-all text-left flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-semibold text-white">Garden Terrace</span>
+                                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-stone-700 text-stone-300">Al Fresco</span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-400 mt-1">Semi-outdoor botanical lounge with evening breeze</p>
+                                        </div>
+                                        <div class="mt-3 pt-2 border-t border-stone-700/60 flex justify-between items-center text-[11px]">
+                                            <span class="text-stone-300">Tables: T1 - T4</span>
+                                            <span class="text-stone-300 font-medium">HK$300/guest</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Next Step Button (Triggers Dining Policy Modal) -->
+                        <div class="pt-4 flex justify-end">
+                            <button type="button" onclick="openPolicyModal()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-obsidian hover:bg-stone-800 text-white font-medium text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-3 shadow-lg shadow-obsidian/10">
+                                <span>Next: Dining Policy</span>
+                                <i class="fa-solid fa-arrow-right text-gold-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- [STEP 2: Guest Contact Information (Salutation, First/Last Name, Region Code, Phone, Email, Special Notes)] -->
+                    <div id="booking-step-2" class="hidden space-y-6">
+                        <div class="border-b border-stone-100 pb-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="font-luxury text-2xl sm:text-3xl font-semibold text-obsidian">Guest Information</h2>
+                                <p class="text-xs sm:text-sm text-stone-500 mt-1">Please enter your contact details to receive instant email and SMS confirmation</p>
+                            </div>
+                            <button type="button" onclick="goToStep(1)" class="text-xs text-stone-500 hover:text-obsidian flex items-center gap-1">
+                                <i class="fa-solid fa-chevron-left"></i> Back to Time & Seat
+                            </button>
+                        </div>
+
+                        <form id="guest-info-form" onsubmit="handleStep2Submit(event)" class="space-y-6">
+                            <!-- Salutation / Gender Selection -->
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2.5">Salutation / Title *</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="salutation" value="Mr." checked class="peer sr-only" onchange="updateSummary()">
+                                        <div class="py-2.5 px-4 text-center rounded-xl border border-stone-200 text-sm font-medium text-stone-600 peer-checked:border-gold-600 peer-checked:bg-gold-50/60 peer-checked:text-obsidian transition-all">
+                                            Mr. (Male)
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="salutation" value="Ms." class="peer sr-only" onchange="updateSummary()">
+                                        <div class="py-2.5 px-4 text-center rounded-xl border border-stone-200 text-sm font-medium text-stone-600 peer-checked:border-gold-600 peer-checked:bg-gold-50/60 peer-checked:text-obsidian transition-all">
+                                            Ms. (Female)
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="salutation" value="Miss" class="peer sr-only" onchange="updateSummary()">
+                                        <div class="py-2.5 px-4 text-center rounded-xl border border-stone-200 text-sm font-medium text-stone-600 peer-checked:border-gold-600 peer-checked:bg-gold-50/60 peer-checked:text-obsidian transition-all">
+                                            Miss (Female)
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="salutation" value="Dr." class="peer sr-only" onchange="updateSummary()">
+                                        <div class="py-2.5 px-4 text-center rounded-xl border border-stone-200 text-sm font-medium text-stone-600 peer-checked:border-gold-600 peer-checked:bg-gold-50/60 peer-checked:text-obsidian transition-all">
+                                            Dr. / Prof.
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- First Name & Last Name -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Last Name (Surname) *</label>
+                                    <input type="text" id="guest-lastname" required placeholder="e.g., Chan" value="Chan" oninput="updateSummary()"
+                                        class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">First Name (Given Name) *</label>
+                                    <input type="text" id="guest-firstname" required placeholder="e.g., David" value="David" oninput="updateSummary()"
+                                        class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Phone Number (with Region Code Dropdown) & Email Address -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Phone Number (with Region Code) *</label>
+                                    <div class="flex rounded-xl border border-stone-200 focus-within:border-gold-600 focus-within:ring-2 focus-within:ring-gold-500/20 overflow-hidden bg-white">
+                                        <select id="guest-country-code" onchange="updateSummary()" class="bg-stone-50 px-3 py-3 text-xs sm:text-sm font-medium text-obsidian border-r border-stone-200 outline-none">
+                                            <option value="+852">🇭🇰 Hong Kong (+852)</option>
+                                            <option value="+853">🇲🇴 Macau (+853)</option>
+                                            <option value="+86">🇨🇳 Mainland China (+86)</option>
+                                            <option value="+886">🇹🇼 Taiwan (+886)</option>
+                                            <option value="+65">🇸🇬 Singapore (+65)</option>
+                                            <option value="+81">🇯🇵 Japan (+81)</option>
+                                            <option value="+44">🇬🇧 United Kingdom (+44)</option>
+                                            <option value="+1">🇺🇸 USA / Canada (+1)</option>
+                                        </select>
+                                        <input type="tel" id="guest-phone" required placeholder="9123 4567" value="98765432" oninput="updateSummary()"
+                                            class="w-full px-3.5 py-3 outline-none text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Email Address (for Confirmation) *</label>
+                                    <input type="email" id="guest-email" required placeholder="example@domain.com" value="david.chan@example.com" oninput="updateSummary()"
+                                        class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Occasion & Dietary Quick Tags -->
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Occasion & Dietary Tags (Optional)</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="toggleTag(this, 'Birthday Celebration')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">🎂 Birthday</button>
+                                    <button type="button" onclick="toggleTag(this, 'Anniversary')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">🥂 Anniversary</button>
+                                    <button type="button" onclick="toggleTag(this, 'Business Dining')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">💼 Business Dining</button>
+                                    <button type="button" onclick="toggleTag(this, 'Nut Allergy')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">🥜 Nut Allergy</button>
+                                    <button type="button" onclick="toggleTag(this, 'Shellfish Allergy')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">🦐 Shellfish Allergy</button>
+                                    <button type="button" onclick="toggleTag(this, 'Vegetarian Request')" class="tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all">🌿 Vegetarian</button>
+                                </div>
+                            </div>
+
+                            <!-- Special Requests / Notes Textarea -->
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">
+                                    Special Requests & Notes for the Restaurant
+                                </label>
+                                <textarea id="guest-notes" rows="3" oninput="updateSummary()" placeholder="Let us know how we can prepare for your visit: e.g., complimentary dessert message 'Happy Anniversary', high chair needed, valet parking reservation, or BYOB corkage arrangement..."
+                                    class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm"></textarea>
+                            </div>
+
+                            <div class="pt-4 flex flex-col sm:flex-row justify-between gap-3">
+                                <button type="button" onclick="goToStep(1)" class="px-6 py-3.5 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 text-sm font-medium">
+                                    Previous Step
+                                </button>
+                                <button type="submit" class="px-8 py-3.5 rounded-xl bg-obsidian hover:bg-stone-800 text-white font-medium text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-3 shadow-lg">
+                                    <span>Next: Review & Payment</span>
+                                    <i class="fa-solid fa-arrow-right text-gold-400"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- [STEP 3: Payment & Previous Booking Summary Review] -->
+                    <div id="booking-step-3" class="hidden space-y-6">
+                        <div class="border-b border-stone-100 pb-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="font-luxury text-2xl sm:text-3xl font-semibold text-obsidian">Review Reservation & Deposit Payment</h2>
+                                <p class="text-xs sm:text-sm text-stone-500 mt-1">Please verify your selected booking details below and complete the deposit authorization</p>
+                            </div>
+                            <button type="button" onclick="goToStep(2)" class="text-xs text-stone-500 hover:text-obsidian flex items-center gap-1">
+                                <i class="fa-solid fa-chevron-left"></i> Edit Guest Details
+                            </button>
+                        </div>
+
+                        <!-- Complete Summary Card of Previously Selected Details -->
+                        <div class="bg-gold-50/70 border border-gold-200 rounded-2xl p-5 space-y-4">
+                            <div class="flex items-center justify-between border-b border-gold-200/80 pb-3">
+                                <span class="text-xs font-semibold uppercase tracking-widest text-gold-700">
+                                    <i class="fa-solid fa-clipboard-check mr-1.5"></i> Selected Reservation Details
+                                </span>
+                                <span class="text-xs text-stone-500">Click top right to modify</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Guest Name</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-name">Mr. David Chan</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Contact Phone</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-phone">+852 98765432</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Email Address</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block truncate" id="review-email">david.chan@example.com</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Party & Seating</span>
+                                    <span class="font-semibold text-gold-700 mt-0.5 block" id="review-seat">2 Guests · Harbour View Window</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gold-200/60 text-sm">
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Date & Time Slot</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-datetime">2026-11-20 · Dinner 19:30</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Special Requests & Notes</span>
+                                    <span class="text-stone-700 mt-0.5 block text-xs" id="review-notes">No special requests</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method Selector -->
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-3">Select Deposit Payment Method</label>
+                            <div class="grid grid-cols-3 gap-3 mb-5">
+                                <button type="button" onclick="selectPaymentMethod('card')" id="pay-method-card" class="p-3.5 rounded-xl border-2 border-obsidian bg-stone-900 text-white text-xs font-medium flex items-center justify-center gap-2 transition-all">
+                                    <i class="fa-regular fa-credit-card text-gold-400 text-base"></i> Credit Card
+                                </button>
+                                <button type="button" onclick="selectPaymentMethod('applepay')" id="pay-method-applepay" class="p-3.5 rounded-xl border border-stone-200 text-stone-700 hover:border-stone-400 text-xs font-medium flex items-center justify-center gap-2 transition-all">
+                                    <i class="fa-brands fa-apple-pay text-xl"></i> Apple Pay
+                                </button>
+                                <button type="button" onclick="selectPaymentMethod('alipay')" id="pay-method-alipay" class="p-3.5 rounded-xl border border-stone-200 text-stone-700 hover:border-stone-400 text-xs font-medium flex items-center justify-center gap-2 transition-all">
+                                    <i class="fa-solid fa-wallet text-sky-600 text-base"></i> AlipayHK / FPS
+                                </button>
+                            </div>
+
+                            <!-- Credit Card Input Form -->
+                            <div id="payment-card-form" class="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-stone-600">SSL 256-bit Encrypted Checkout</span>
+                                    <div class="flex space-x-2 text-lg text-stone-500">
+                                        <i class="fa-brands fa-cc-visa"></i>
+                                        <i class="fa-brands fa-cc-mastercard"></i>
+                                        <i class="fa-brands fa-cc-amex"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-stone-500 mb-1">Cardholder Name</label>
+                                    <input type="text" value="DAVID CHAN" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm uppercase">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-stone-500 mb-1">Card Number</label>
+                                    <div class="relative">
+                                        <input type="text" value="4532 •••• •••• 8891" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                        <i class="fa-solid fa-lock absolute right-3.5 top-3 text-stone-400 text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-stone-500 mb-1">Expiry Date (MM/YY)</label>
+                                        <input type="text" value="08/29" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-stone-500 mb-1">Security Code (CVV)</label>
+                                        <input type="password" value="888" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Digital Wallet QR Prompt -->
+                            <div id="payment-qr-form" class="hidden bg-stone-50 p-6 rounded-2xl border border-stone-200/80 text-center space-y-3">
+                                <div class="w-36 h-36 mx-auto bg-white p-3 rounded-xl border border-stone-200 flex items-center justify-center">
+                                    <i class="fa-solid fa-qrcode text-7xl text-obsidian"></i>
+                                </div>
+                                <p class="text-xs text-stone-600">Scan the QR code above with your mobile app or click the button below to simulate authorization</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-stone-100">
+                            <div class="text-left">
+                                <span class="text-xs text-stone-500 block">Total Deposit Due (Fully deductible from final bill)</span>
+                                <span class="font-luxury text-3xl font-bold text-obsidian" id="payment-total-display">HK$ 1,000</span>
+                            </div>
+                            <button type="button" onclick="completePaymentAndSendEmail()" id="pay-submit-btn" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gold-600 hover:bg-gold-700 text-white font-medium text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-3 shadow-lg shadow-gold-600/20">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Authorize Payment & Send Confirmation Email</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- [STEP 4: Reservation Confirmed & Automated Email Dispatch Preview] -->
+                    <div id="booking-step-4" class="hidden space-y-8 py-4">
+                        <div class="text-center space-y-3">
+                            <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto text-2xl shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="text-xs uppercase tracking-[0.2em] text-gold-600 font-semibold block">Reservation Confirmed</span>
+                            <h2 class="font-luxury text-3xl sm:text-4xl font-semibold text-obsidian">Your Table Is Reserved</h2>
+                            <p class="text-sm text-stone-500 max-w-md mx-auto">
+                                Booking Reference <span id="confirmed-booking-id" class="font-mono font-semibold text-obsidian bg-stone-100 px-2 py-0.5 rounded">BK-89241</span> has been saved to MongoDB, and a confirmation email has been dispatched.
+                            </p>
+                        </div>
+
+                        <!-- Simulated Confirmation Email Sent View -->
+                        <div class="bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden">
+                            <div class="bg-obsidian text-white px-5 py-3 flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-regular fa-envelope text-gold-400"></i>
+                                    <span>Automated Confirmation Email Dispatched</span>
+                                </div>
+                                <span class="text-emerald-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check"></i> Delivered Just Now
+                                </span>
+                            </div>
+                            <div class="p-5 sm:p-6 space-y-4 text-xs sm:text-sm bg-white m-3 rounded-xl border border-stone-100 shadow-sm">
+                                <div class="border-b border-stone-100 pb-3 space-y-1 text-xs text-stone-500">
+                                    <div><strong class="text-stone-700">To:</strong> <span id="email-preview-to">david.chan@example.com</span></div>
+                                    <div><strong class="text-stone-700">Subject:</strong> [L'ÉCLAT Hong Kong] Your Reservation Confirmation & E-Voucher (<span id="email-preview-id">BK-89241</span>)</div>
+                                </div>
+                                <div class="space-y-2 text-stone-700 leading-relaxed">
+                                    <p>Dear <strong id="email-preview-guest" class="text-obsidian">Mr. David Chan</strong>,</p>
+                                    <p>Thank you for choosing <strong>L'ÉCLAT</strong>. It is our pleasure to confirm your table reservation for <strong id="email-preview-datetime" class="text-gold-700">2026-11-20 Dinner at 19:30</strong>.</p>
+                                    <div class="bg-stone-50 p-3.5 rounded-lg border border-stone-200/70 text-xs space-y-1 my-2">
+                                        <div>• <strong>Reserved Seating:</strong> <span id="email-preview-seat">2 Guests · Harbour View Window (Table W1)</span></div>
+                                        <div>• <strong>Deposit Paid:</strong> <span id="email-preview-deposit">HK$ 1,000 (Authorized via Credit Card)</span></div>
+                                        <div>• <strong>Special Notes:</strong> <span id="email-preview-notes">No special requests</span></div>
+                                        <div>• <strong>Location:</strong> Suite 5501, 55/F, Two International Finance Centre, Central, Hong Kong</div>
+                                    </div>
+                                    <p class="text-xs text-stone-400">Should you need to modify or cancel your reservation, please visit the "My Bookings (CRUD)" portal at least 24 hours prior to your dining time.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                            <button type="button" onclick="resendEmailToast()" class="px-5 py-3 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-xs font-medium flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-paper-plane"></i> Resend Confirmation Email
+                            </button>
+                            <button type="button" onclick="switchTab('manage')" class="px-6 py-3 rounded-xl bg-obsidian text-white hover:bg-stone-800 text-xs font-medium flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-list-check text-gold-400"></i> Manage Booking in CRUD Portal
+                            </button>
+                            <button type="button" onclick="resetBookingFlow()" class="px-5 py-3 rounded-xl bg-gold-50 text-gold-700 hover:bg-gold-100 text-xs font-medium">
+                                Make Another Reservation
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Sidebar: Live Reservation Summary + Quick Location & Concierge Card (4 Cols) -->
+                <div class="lg:col-span-4 space-y-6 sticky top-28">
+                    
+                    <!-- Live Reservation Summary Card -->
+                    <div class="bg-obsidian text-alabaster rounded-2xl p-6 card-shadow border border-gold-500/30 relative overflow-hidden">
+                        <div class="flex items-center justify-between border-b border-stone-800 pb-4 mb-5">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-[0.2em] text-gold-400 block">Reservation Summary</span>
+                                <h3 class="font-luxury text-xl text-white mt-0.5">Your Selection</h3>
+                            </div>
+                            <i class="fa-solid fa-wine-glass text-gold-400 text-lg"></i>
+                        </div>
+
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-user-group text-gold-400 mt-1 w-4 text-center"></i>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Party Size</span>
+                                    <span class="font-medium text-white" id="summary-guests">2 Guests</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fa-regular fa-calendar-check text-gold-400 mt-1 w-4 text-center"></i>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Date & Time</span>
+                                    <span class="font-medium text-white" id="summary-datetime">2026-11-20 · Dinner 19:30</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-chair text-gold-400 mt-1 w-4 text-center"></i>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Seating Zone</span>
+                                    <span class="font-medium text-gold-300" id="summary-seat">Harbour View Window (Table W1)</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fa-regular fa-id-badge text-gold-400 mt-1 w-4 text-center"></i>
+                                <div>
+                                    <span class="text-xs text-stone-400 block">Primary Guest</span>
+                                    <span class="font-medium text-white" id="summary-guest-name">Mr. David Chan (+852 98765432)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-stone-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-stone-400 block">Deposit (Deductible)</span>
+                                <span class="text-[11px] text-stone-500" id="summary-deposit-calc">HK$ 500 x 2 Guests</span>
+                            </div>
+                            <span class="font-luxury text-2xl font-bold text-gold-400" id="summary-total">HK$ 1,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Location & Concierge Info Card -->
+                    <div class="bg-white rounded-2xl border border-stone-200/80 p-5 card-shadow space-y-4">
+                        <h4 class="font-luxury text-lg font-semibold text-obsidian flex items-center gap-2">
+                            <i class="fa-solid fa-location-dot text-gold-600 text-sm"></i> Location & Concierge
+                        </h4>
+                        <div class="text-xs text-stone-600 space-y-2 leading-relaxed">
+                            <p><strong>Address:</strong> Suite 5501, 55/F, Two IFC, 8 Finance Street, Central, Hong Kong</p>
+                            <p><strong>Opening Hours:</strong><br>Lunch 12:00 – 15:00 | Dinner 18:00 – 23:00</p>
+                            <p><strong>Direct Line:</strong> +852 2888 9191</p>
+                            <p><strong>WhatsApp Concierge:</strong> +852 6888 9191</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="switchTab('location')" class="py-2 px-3 rounded-lg bg-stone-100 hover:bg-stone-200 text-obsidian text-xs font-medium transition-colors">
+                                <i class="fa-regular fa-map mr-1"></i> Map & Access
+                            </button>
+                            <button onclick="openInquiryModal()" class="py-2 px-3 rounded-lg bg-gold-50 hover:bg-gold-100 text-gold-700 text-xs font-medium transition-colors">
+                                <i class="fa-regular fa-envelope mr-1"></i> Direct Inquiry
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: Culinary Showcase (Pure Display of Signature Dishes, No Package Selection) ==================== -->
+        <div id="tab-menu" class="hidden space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="text-xs uppercase tracking-[0.25em] text-gold-600 font-semibold">Seasonal Gastronomy Showcase</span>
+                <h2 class="font-luxury text-4xl font-semibold text-obsidian">Our Signature Creations</h2>
+                <p class="text-sm text-stone-500">An exhibition of our finest seasonal dishes crafted with air-flown French produce and artisanal ingredients.</p>
+            </div>
+
+            <!-- Dish Category Sections (Purely Visual & Descriptive Showcase) -->
+            <div class="space-y-10">
+                
+                <!-- Category 1: Appetizers & Cold Starters -->
+                <div class="space-y-4">
+                    <div class="border-b border-stone-200 pb-2 flex items-center justify-between">
+                        <h3 class="font-luxury text-2xl font-semibold text-obsidian">Les Entrées · Starters & Delicacies</h3>
+                        <span class="text-xs uppercase tracking-widest text-stone-400">First Impressions</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Brittany Blue Lobster</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 420</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Poached blue lobster medallion, fermented white asparagus, finger lime pearls, and aged Champagne velouté.</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-gold-50 text-gold-700 font-medium">Chef's Signature</span>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Oscietra Caviar & Uni Tartlet</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 480</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Crispy buckwheat tartlet layered with Hokkaido Bafun sea urchin, Royal Oscietra caviar, and smoked crème fraîche.</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">Seasonal Highlight</span>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Pan-Seared Duck Foie Gras</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 360</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Landes duck foie gras, black fig compote, Périgord black truffle reduction, and toasted brioche mousseline.</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">Classic French</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 2: Main Courses -->
+                <div class="space-y-4">
+                    <div class="border-b border-stone-200 pb-2 flex items-center justify-between">
+                        <h3 class="font-luxury text-2xl font-semibold text-obsidian">Les Plats Principaux · Main Courses</h3>
+                        <span class="text-xs uppercase tracking-widest text-stone-400">From Land & Sea</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Charcoal-Grilled A5 Miyazaki Wagyu</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 880</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Binchotan-kissed A5 Wagyu tenderloin, roasted bone marrow bordelaise sauce, black garlic purée, and pomme mille-feuille.</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-gold-50 text-gold-700 font-medium">Most Popular</span>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Crispy Scale Amadai Tilefish</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 620</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Wild-caught Japanese Amadai with crispy scales, saffron bouillabaisse emulsion, bouchot mussels, and sea fennel.</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">Ocean Catch</span>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Truffle Roasted Bresse Poularde</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 1,480</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Whole AOC Bresse chicken infused with black truffle butter under the skin, Vin Jaune morel cream sauce (For Two).</p>
+                            <span class="inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-gold-50 text-gold-700 font-medium">For Sharing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 3: Desserts & Sommelier Wine Cellar -->
+                <div class="space-y-4">
+                    <div class="border-b border-stone-200 pb-2 flex items-center justify-between">
+                        <h3 class="font-luxury text-2xl font-semibold text-obsidian">Les Desserts & Cave à Vin · Finale & Cellar</h3>
+                        <span class="text-xs uppercase tracking-widest text-stone-400">Sweet Artisanship</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Tahitian Vanilla Mille-Feuille</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 220</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Caramelized hand-laminated puff pastry, roasted Tahitian vanilla bean diplomate cream, and aged Agricole rum ice cream.</p>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Valrhona 70% Guanaja Soufflé</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">HK$ 240</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Warm dark chocolate soufflé baked to order, accompanied by Piedmont hazelnut praline and blood orange sorbet.</p>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-stone-200/80 card-shadow space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-luxury text-xl font-semibold text-obsidian">Grand Cru Wine & Tea Pairing</h4>
+                                <span class="text-sm font-semibold text-gold-700 shrink-0">From HK$ 580</span>
+                            </div>
+                            <p class="text-xs text-stone-500 leading-relaxed">Curated by our Head Sommelier featuring rare Burgundy vintages, prestige Champagnes, and artisanal cold-brewed teas.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: Restaurant Location Map & Contact Information ==================== -->
+        <div id="tab-location" class="hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Detailed Address, Directions, Parking, and Contact Info -->
+                <div class="lg:col-span-5 bg-white p-6 sm:p-8 rounded-2xl border border-stone-200/80 card-shadow space-y-6">
+                    <div>
+                        <span class="text-xs uppercase tracking-[0.2em] text-gold-600 font-semibold">Location & Concierge</span>
+                        <h2 class="font-luxury text-3xl font-semibold text-obsidian mt-1">Visit & Contact Us</h2>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-9 h-9 rounded-xl bg-gold-50 text-gold-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-obsidian">Address</h4>
+                                <p class="text-stone-600 text-xs sm:text-sm mt-0.5">Suite 5501, 55/F, Two International Finance Centre (IFC Two), 8 Finance Street, Central, Hong Kong</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-9 h-9 rounded-xl bg-gold-50 text-gold-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-train-subway"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-obsidian">Directions & Valet Parking</h4>
+                                <p class="text-stone-600 text-xs sm:text-sm mt-0.5">
+                                    • <strong>MTR:</strong> Hong Kong Station Exit F (Direct express elevator via IFC Mall to 55/F)<br>
+                                    • <strong>Valet Parking:</strong> 3 hours complimentary parking at Two IFC Carpark upon dinner patronage of HK$ 2,000 or above.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-9 h-9 rounded-xl bg-gold-50 text-gold-700 flex items-center justify-center shrink-0 mt-0.5">
+                                <i class="fa-solid fa-phone-volume"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-obsidian">Contact Channels</h4>
+                                <p class="text-stone-600 text-xs sm:text-sm mt-0.5">
+                                    • Reservations Hotline: +852 2888 9191<br>
+                                    • WhatsApp Concierge: +852 6888 9191<br>
+                                    • Email: concierge@leclat-hk.com
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-stone-100">
+                        <button onclick="openInquiryModal()" class="w-full py-3.5 rounded-xl bg-obsidian hover:bg-stone-800 text-white text-xs font-medium tracking-wider uppercase transition-all flex items-center justify-center gap-2">
+                            <i class="fa-regular fa-paper-plane text-gold-400"></i> Send Private Dining or Event Inquiry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive Visual Map Panel -->
+                <div class="lg:col-span-7 bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 relative min-h-[420px] flex flex-col justify-between p-6 text-white">
+                    <!-- Decorative Map Grid Overlay -->
+                    <div class="absolute inset-0 opacity-35 bg-[linear-gradient(to_right,#333_1px,transparent_1px),linear-gradient(to_bottom,#333_1px,transparent_1px)] bg-[size:36px_36px]"></div>
+                    
+                    <!-- Stylized Victoria Harbour Coastline SVG -->
+                    <svg class="absolute inset-0 w-full h-full opacity-25 pointer-events-none" viewBox="0 0 800 500" fill="none">
+                        <path d="M0 120 Q 250 180 450 100 T 800 150 L 800 0 L 0 0 Z" fill="#0284c7"/>
+                        <path d="M100 320 L 700 220" stroke="#d0a361" stroke-width="2" stroke-dasharray="6 6"/>
+                        <path d="M350 80 L 420 480" stroke="#78716c" stroke-width="1.5"/>
+                    </svg>
+
+                    <div class="relative z-10 flex justify-between items-start">
+                        <div class="bg-obsidian/90 backdrop-blur px-4 py-2.5 rounded-xl border border-stone-700 text-xs">
+                            <span class="text-gold-400 font-semibold block"><i class="fa-solid fa-water mr-1"></i> Victoria Harbour Waterfront (North)</span>
+                            <span class="text-stone-400">22.2855° N, 114.1577° E · Central, Hong Kong</span>
+                        </div>
+                        <a href="https://maps.google.com/?q=Two+International+Finance+Centre+Hong+Kong" target="_blank" class="bg-gold-600 hover:bg-gold-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shadow-lg">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open in Google Maps
+                        </a>
+                    </div>
+
+                    <!-- Center Map Pin Marker -->
+                    <div class="relative z-10 my-auto mx-auto text-center">
+                        <div class="inline-flex flex-col items-center">
+                            <div class="bg-obsidian border-2 border-gold-400 px-4 py-2 rounded-xl shadow-2xl mb-2">
+                                <span class="font-luxury text-lg font-bold text-gold-300 block leading-none">L'ÉCLAT</span>
+                                <span class="text-[10px] text-stone-300">Two IFC · 55/F</span>
+                            </div>
+                            <div class="w-5 h-5 rounded-full bg-gold-500 animate-ping absolute bottom-1"></div>
+                            <div class="w-4 h-4 rounded-full bg-gold-400 border-2 border-obsidian relative z-10"></div>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 bg-obsidian/90 backdrop-blur p-4 rounded-xl border border-stone-700 grid grid-cols-3 gap-4 text-xs">
+                        <div>
+                            <span class="text-stone-400 block">From Hong Kong MTR</span>
+                            <span class="font-semibold text-white">3 mins walk (Exit F)</span>
+                        </div>
+                        <div>
+                            <span class="text-stone-400 block">From Central Ferry Pier</span>
+                            <span class="font-semibold text-white">6 mins via footbridge</span>
+                        </div>
+                        <div>
+                            <span class="text-stone-400 block">Dress Code</span>
+                            <span class="font-semibold text-gold-300">Smart Casual</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: My Bookings CRUD Portal (Meets COMP3810SEF Requirements) ==================== -->
+        <div id="tab-manage" class="hidden space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200/80 card-shadow space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 pb-5">
+                    <div>
+                        <span class="text-xs uppercase tracking-[0.2em] text-gold-600 font-semibold">COMP3810SEF CRUD & RESTful Ready</span>
+                        <h2 class="font-luxury text-3xl font-semibold text-obsidian mt-0.5">Reservation Management (Read / Update / Delete)</h2>
+                        <p class="text-xs sm:text-sm text-stone-500 mt-1">Search reservations by ID, name, phone, or seating zone (Read), and modify (Update) or cancel (Delete) records</p>
+                    </div>
+                    <button onclick="switchTab('booking')" class="px-5 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium hover:bg-stone-800 transition-all shrink-0">
+                        <i class="fa-solid fa-plus mr-1.5 text-gold-400"></i> New Reservation (Create)
+                    </button>
+                </div>
+
+                <!-- Search & Query Filter Bar (Read by Query Conditions) -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-xl border border-stone-200/70">
+                    <div class="sm:col-span-2">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400 text-xs"></i>
+                            <input type="text" id="crud-search-input" oninput="renderBookingsList()" placeholder="Search Booking ID (e.g. BK-89201), Name, or Phone..." 
+                                class="w-full pl-9 pr-4 py-2 rounded-lg border border-stone-200 text-xs sm:text-sm outline-none focus:border-gold-600 bg-white">
+                        </div>
+                    </div>
+                    <div>
+                        <select id="crud-filter-seat" onchange="renderBookingsList()" class="w-full px-3 py-2 rounded-lg border border-stone-200 text-xs sm:text-sm outline-none bg-white">
+                            <option value="all">All Seating Zones</option>
+                            <option value="Harbour">Harbour View Window</option>
+                            <option value="Main">Main Dining Booth</option>
+                            <option value="Counter">Chef's Counter</option>
+                            <option value="Terrace">Garden Terrace</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button onclick="resetCrudSearch()" class="w-full py-2 px-3 rounded-lg border border-stone-300 text-stone-600 hover:bg-white text-xs font-medium transition-all">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bookings List Container -->
+                <div id="crud-bookings-container" class="space-y-4">
+                    <!-- Dynamically rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== MODAL 1: Dining Policy & Terms Modal (Must Agree Before Step 2) ==================== -->
+    <div id="policy-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 border border-stone-200 shadow-2xl space-y-5 animate-fade-in">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-4">
+                <div>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-gold-600 font-semibold block">Dining Policy & Terms</span>
+                    <h3 class="font-luxury text-2xl font-semibold text-obsidian">Reservation Guidelines & Dress Code</h3>
+                </div>
+                <button onclick="closePolicyModal()" class="text-stone-400 hover:text-obsidian p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-stone-600 max-h-72 overflow-y-auto pr-2 leading-relaxed">
+                <div class="p-3 rounded-xl bg-gold-50/70 border border-gold-200 text-obsidian text-xs">
+                    <strong>Selected Slot:</strong> <span id="modal-policy-summary">2 Guests · 2026-11-20 Dinner 19:30 · Harbour View Window</span>
+                </div>
+                <p><strong>1. Deposit & Cancellation Policy:</strong><br>To secure your reservation and seasonal ingredients, a deposit is required (fully deductible from your final bill). Any cancellation or modification must be made at least <strong>24 hours prior</strong> to your reservation time; otherwise, the deposit will be forfeited.</p>
+                <p><strong>2. Table Holding Time:</strong><br>Your table will be held for <strong>15 minutes</strong> from the reserved time. Please contact our concierge if you anticipate arriving late.</p>
+                <p><strong>3. Dress Code:</strong><br>Our dress code is <strong>Smart Casual</strong>. Gentlemen are kindly requested to refrain from wearing sleeveless shirts, athletic shorts, or open-toed sandals.</p>
+                <p><strong>4. Corkage & Cake Cutting Fee:</strong><br>Corkage is HK$ 400 per 750ml bottle of wine/champagne. A cakeage fee of HK$ 250 applies for outside celebration cakes.</p>
+                <p><strong>5. Dietary Restrictions:</strong><br>Please indicate any food allergies or dietary requirements in the "Special Requests" box on the next page.</p>
+            </div>
+
+            <label class="flex items-start gap-2.5 cursor-pointer pt-2 border-t border-stone-100">
+                <input type="checkbox" id="agree-policy-checkbox" onchange="togglePolicyConfirmBtn()" class="mt-1 w-4 h-4 accent-obsidian rounded">
+                <span class="text-xs text-stone-700 font-medium">I have read and agree to the reservation policies, dress code, and deposit terms above.</span>
+            </label>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closePolicyModal()" class="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-600 text-xs font-medium hover:bg-stone-50">
+                    Back
+                </button>
+                <button type="button" id="confirm-policy-btn" onclick="proceedToStep2()" disabled class="px-6 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    Agree & Continue →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: Concierge Inquiry Modal ==================== -->
+    <div id="inquiry-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                <h3 class="font-luxury text-2xl font-semibold text-obsidian">Contact Concierge</h3>
+                <button onclick="closeInquiryModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitInquiry(event)" class="space-y-4 text-xs sm:text-sm">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Your Name *</label>
+                    <input type="text" required placeholder="e.g., Ms. Rachel Lam" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Email or WhatsApp Number *</label>
+                    <input type="text" required placeholder="+852 9123 4567 / email@domain.com" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Inquiry Topic</label>
+                    <select class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none bg-white">
+                        <option>Private Dining Room (9+ Guests)</option>
+                        <option>Proposal / Anniversary Table Styling</option>
+                        <option>Corporate Buyout & Wine Reception</option>
+                        <option>Dietary & Allergen Consultation</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Message *</label>
+                    <textarea rows="3" required placeholder="How may our concierge team assist you?" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeInquiryModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 text-xs">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-obsidian text-white text-xs font-medium">Send Inquiry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: Edit Booking Modal (CRUD Update Function) ==================== -->
+    <div id="edit-booking-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-stone-200 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                <h3 class="font-luxury text-2xl font-semibold text-obsidian">Modify Reservation (Update)</h3>
+                <button onclick="closeEditModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveEditedBooking(event)" class="space-y-3.5 text-xs sm:text-sm">
+                <input type="hidden" id="edit-booking-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Dining Date</label>
+                        <input type="date" id="edit-date" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Time Slot</label>
+                        <select id="edit-time" class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white">
+                            <option value="Lunch 12:00">Lunch 12:00</option>
+                            <option value="Lunch 13:00">Lunch 13:00</option>
+                            <option value="Dinner 18:30">Dinner 18:30</option>
+                            <option value="Dinner 19:30">Dinner 19:30</option>
+                            <option value="Dinner 20:30">Dinner 20:30</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Party Size</label>
+                        <input type="number" id="edit-guests" min="1" max="8" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Contact Phone</label>
+                        <input type="text" id="edit-phone" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Special Requests</label>
+                    <input type="text" id="edit-notes" class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-xs">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-gold-600 text-white text-xs font-medium">Save Changes (PUT /update)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 4: Login / Logout Modal (Meets Course Authentication Requirement) ==================== -->
+    <div id="login-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 border border-stone-200 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                <h3 class="font-luxury text-2xl font-semibold text-obsidian">Member Sign In / Switch User</h3>
+                <button onclick="toggleLoginModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleUserLogin(event)" class="space-y-3.5 text-xs sm:text-sm">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Username / Email</label>
+                    <input type="text" id="login-username-input" value="David Chan (VIP)" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Password</label>
+                    <input type="password" value="••••••••" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200">
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <button type="button" onclick="handleLogout()" class="text-xs text-red-600 hover:underline">Logout Current Session</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium">Sign In (Login)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global Toast Notification -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 z-50 hidden bg-obsidian text-white px-5 py-3.5 rounded-xl shadow-2xl border border-gold-500/40 flex items-center gap-3 text-xs sm:text-sm">
+        <i class="fa-solid fa-circle-check text-gold-400 text-base"></i>
+        <span id="toast-message">Action completed successfully</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-obsidian text-stone-400 text-xs py-8 border-t border-stone-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="font-luxury text-lg text-white tracking-widest">L'ÉCLAT</span>
+                <span>© 2026 Group GP91 Restaurant Booking System (COMP3810SEF).</span>
+            </div>
+            <div class="flex gap-6">
+                <a href="javascript:void(0)" onclick="openPolicyModal()" class="hover:text-gold-300 transition-colors">Dining Policy</a>
+                <a href="javascript:void(0)" onclick="switchTab('location')" class="hover:text-gold-300 transition-colors">Location & Map</a>
+                <a href="javascript:void(0)" onclick="switchTab('manage')" class="hover:text-gold-300 transition-colors">CRUD Portal</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== Application State Management ====================
+        const bookingState = {
+            guests: 2,
+            date: '2026-11-20',
+            period: 'dinner', // 'lunch' or 'dinner'
+            time: '19:30',
+            seatName: 'Harbour View Window (Table W1)',
+            seatCode: 'window',
+            depositPerPerson: 500,
+            salutation: 'Mr.',
+            lastName: 'Chan',
+            firstName: 'David',
+            countryCode: '+852',
+            phone: '98765432',
+            email: 'david.chan@example.com',
+            tags: [],
+            notes: '',
+            paymentMethod: 'card'
+        };
+
+        const timeSlots = {
+            lunch: ['12:00', '12:30', '13:00', '13:30'],
+            dinner: ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30']
+        };
+
+        // Pre-loaded sample reservations simulating MongoDB documents for CRUD demonstration
+        let savedBookings = [
+            {
+                id: 'BK-89201',
+                guestName: 'Mr. David Chan',
+                phone: '+852 98765432',
+                email: 'david.chan@example.com',
+                guests: 2,
+                date: '2026-11-20',
+                time: 'Dinner 19:30',
+                seat: 'Harbour View Window (Table W1)',
+                deposit: 1000,
+                notes: 'Anniversary · Complimentary dessert message "Happy Anniversary"'
+            },
+            {
+                id: 'BK-89155',
+                guestName: 'Miss Rachel Lam',
+                phone: '+852 61239988',
+                email: 'rachel.lam@example.com',
+                guests: 4,
+                date: '2026-11-25',
+                time: 'Lunch 12:30',
+                seat: 'Main Dining Booth (Table M3)',
+                deposit: 1200,
+                notes: 'Business Dining · Quiet corner table preferred'
+            }
+        ];
+
+        // ==================== Initialization on Window Load ====================
+        window.onload = function () {
+            document.getElementById('booking-date').value = bookingState.date;
+            renderGuestButtons();
+            renderTimeSlots();
+            updateSummary();
+            renderBookingsList();
+        };
+
+        // Render party size buttons (1 to 8 guests)
+        function renderGuestButtons() {
+            const container = document.getElementById('guest-selector');
+            container.innerHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const isSelected = bookingState.guests === i;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => {
+                    bookingState.guests = i;
+                    renderGuestButtons();
+                    updateSummary();
+                };
+                btn.className = isSelected
+                    ? 'py-3 rounded-xl font-semibold text-xs sm:text-sm bg-obsidian text-gold-300 border-2 border-obsidian shadow-sm transition-all'
+                    : 'py-3 rounded-xl font-medium text-xs sm:text-sm bg-stone-50 text-stone-700 border border-stone-200 hover:border-gold-500 transition-all';
+                btn.innerText = i === 1 ? '1 Guest' : `${i} Guests`;
+                container.appendChild(btn);
+            }
+        }
+
+        // Toggle between Lunch and Dinner service periods
+        function selectPeriod(period) {
+            bookingState.period = period;
+            bookingState.time = timeSlots[period][0];
+            document.getElementById('period-lunch').className = period === 'lunch'
+                ? 'py-2.5 text-xs font-medium rounded-lg transition-all bg-white text-obsidian shadow-sm'
+                : 'py-2.5 text-xs font-medium rounded-lg transition-all text-stone-600';
+            document.getElementById('period-dinner').className = period === 'dinner'
+                ? 'py-2.5 text-xs font-medium rounded-lg transition-all bg-white text-obsidian shadow-sm'
+                : 'py-2.5 text-xs font-medium rounded-lg transition-all text-stone-600';
+            renderTimeSlots();
+            updateSummary();
+        }
+
+        // Render available time slot buttons
+        function renderTimeSlots() {
+            const container = document.getElementById('time-selector');
+            container.innerHTML = '';
+            const slots = timeSlots[bookingState.period];
+            slots.forEach(slot => {
+                const isSelected = bookingState.time === slot;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => {
+                    bookingState.time = slot;
+                    renderTimeSlots();
+                    updateSummary();
+                };
+                btn.className = isSelected
+                    ? 'py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-gold-600 text-white shadow-sm transition-all flex items-center justify-center gap-1.5'
+                    : 'py-3 px-4 rounded-xl text-xs sm:text-sm font-medium bg-stone-50 text-obsidian border border-stone-200 hover:border-gold-500 transition-all flex items-center justify-center gap-1.5';
+                btn.innerHTML = `<i class="fa-regular fa-clock text-xs"></i> ${slot}`;
+                container.appendChild(btn);
+            });
+        }
+
+        // Select seating zone card
+        function selectSeat(name, code, deposit) {
+            bookingState.seatName = name;
+            bookingState.seatCode = code;
+            bookingState.depositPerPerson = deposit;
+
+            ['window', 'main', 'counter', 'terrace'].forEach(c => {
+                const card = document.getElementById(`seat-card-${c}`);
+                if (c === code) {
+                    card.className = 'seat-option cursor-pointer p-3.5 rounded-xl border border-gold-500 bg-gold-500/15 transition-all text-left flex flex-col justify-between';
+                } else {
+                    card.className = 'seat-option cursor-pointer p-3.5 rounded-xl border border-stone-700 bg-stone-800/60 hover:border-stone-500 transition-all text-left flex flex-col justify-between';
+                }
+            });
+            updateSummary();
+        }
+
+        // Toggle dietary or celebration quick tags
+        function toggleTag(btn, tagText) {
+            const idx = bookingState.tags.indexOf(tagText);
+            if (idx > -1) {
+                bookingState.tags.splice(idx, 1);
+                btn.className = 'tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all';
+            } else {
+                bookingState.tags.push(tagText);
+                btn.className = 'tag-btn text-xs px-3 py-1.5 rounded-full border border-gold-600 bg-gold-50 text-gold-700 font-medium transition-all';
+            }
+            updateSummary();
+        }
+
+        // Synchronize live summary sidebar and Step 3 review panel
+        function updateSummary() {
+            bookingState.date = document.getElementById('booking-date').value || '2026-11-20';
+            const salutationEl = document.querySelector('input[name="salutation"]:checked');
+            if (salutationEl) bookingState.salutation = salutationEl.value;
+
+            bookingState.lastName = document.getElementById('guest-lastname')?.value || 'Chan';
+            bookingState.firstName = document.getElementById('guest-firstname')?.value || 'David';
+            bookingState.countryCode = document.getElementById('guest-country-code')?.value || '+852';
+            bookingState.phone = document.getElementById('guest-phone')?.value || '98765432';
+            bookingState.email = document.getElementById('guest-email')?.value || 'david.chan@example.com';
+            bookingState.notes = document.getElementById('guest-notes')?.value || '';
+
+            const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
+            const totalDeposit = bookingState.guests * bookingState.depositPerPerson;
+            const fullName = `${bookingState.salutation} ${bookingState.firstName} ${bookingState.lastName}`;
+            const fullPhone = `${bookingState.countryCode} ${bookingState.phone}`;
+            const combinedNotes = [
+                ...bookingState.tags,
+                bookingState.notes
+            ].filter(Boolean).join(' · ') || 'No special requests';
+
+            const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
+
+            // Update Right Sidebar Summary
+            document.getElementById('summary-guests').innerText = guestLabel;
+            document.getElementById('summary-datetime').innerText = `${bookingState.date} · ${periodLabel} ${bookingState.time}`;
+            document.getElementById('summary-seat').innerText = bookingState.seatName;
+            document.getElementById('summary-guest-name').innerText = `${fullName} (${fullPhone})`;
+            document.getElementById('summary-deposit-calc').innerText = `HK$ ${bookingState.depositPerPerson} x ${guestLabel}`;
+            document.getElementById('summary-total').innerText = `HK$ ${totalDeposit.toLocaleString()}`;
+
+            // Update Step 3 Verification Card
+            document.getElementById('review-name').innerText = fullName;
+            document.getElementById('review-phone').innerText = fullPhone;
+            document.getElementById('review-email').innerText = bookingState.email;
+            document.getElementById('review-seat').innerText = `${guestLabel} · ${bookingState.seatName}`;
+            document.getElementById('review-datetime').innerText = `${bookingState.date} · ${periodLabel} ${bookingState.time}`;
+            document.getElementById('review-notes').innerText = combinedNotes;
+            document.getElementById('payment-total-display').innerText = `HK$ ${totalDeposit.toLocaleString()}`;
+        }
+
+        // Open Dining Policy Modal before allowing entry to Step 2
+        function openPolicyModal() {
+            const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
+            const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
+            document.getElementById('modal-policy-summary').innerText =
+                `${guestLabel} · ${bookingState.date} ${periodLabel} ${bookingState.time} · ${bookingState.seatName}`;
+            document.getElementById('policy-modal').classList.remove('hidden');
+        }
+
+        function closePolicyModal() {
+            document.getElementById('policy-modal').classList.add('hidden');
+        }
+
+        function togglePolicyConfirmBtn() {
+            const checked = document.getElementById('agree-policy-checkbox').checked;
+            document.getElementById('confirm-policy-btn').disabled = !checked;
+        }
+
+        function proceedToStep2() {
+            closePolicyModal();
+            goToStep(2);
+        }
+
+        // Handle Step 2 Form Submission -> Advance to Step 3 Payment
+        function handleStep2Submit(e) {
+            e.preventDefault();
+            updateSummary();
+            goToStep(3);
+        }
+
+        // Navigate between booking steps (1 to 4)
+        function goToStep(stepNumber) {
+            for (let i = 1; i <= 4; i++) {
+                const panel = document.getElementById(`booking-step-${i}`);
+                const indicator = document.getElementById(`step-ind-${i}`);
+                if (i === stepNumber) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+
+                if (i <= stepNumber) {
+                    indicator.className = 'border-t-2 border-gold-600 pt-3 transition-all';
+                    indicator.children[0].className = 'text-[11px] uppercase tracking-widest text-gold-600 font-semibold block';
+                    indicator.children[1].className = 'text-xs sm:text-sm font-semibold text-obsidian mt-0.5 block';
+                } else {
+                    indicator.className = 'border-t-2 border-stone-200 pt-3 transition-all';
+                    indicator.children[0].className = 'text-[11px] uppercase tracking-widest text-stone-400 font-semibold block';
+                    indicator.children[1].className = 'text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block';
+                }
+            }
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        // Switch payment methods in Step 3
+        function selectPaymentMethod(method) {
+            bookingState.paymentMethod = method;
+            const methods = ['card', 'applepay', 'alipay'];
+            methods.forEach(m => {
+                const btn = document.getElementById(`pay-method-${m}`);
+                if (m === method) {
+                    btn.className = 'p-3.5 rounded-xl border-2 border-obsidian bg-stone-900 text-white text-xs font-medium flex items-center justify-center gap-2 transition-all';
+                } else {
+                    btn.className = 'p-3.5 rounded-xl border border-stone-200 text-stone-700 hover:border-stone-400 text-xs font-medium flex items-center justify-center gap-2 transition-all';
+                }
+            });
+
+            if (method === 'card') {
+                document.getElementById('payment-card-form').classList.remove('hidden');
+                document.getElementById('payment-qr-form').classList.add('hidden');
+            } else {
+                document.getElementById('payment-card-form').classList.add('hidden');
+                document.getElementById('payment-qr-form').classList.remove('hidden');
+            }
+        }
+
+        // Finalize payment, insert record into CRUD array, and display confirmation email preview
+        function completePaymentAndSendEmail() {
+            updateSummary();
+            const newId = 'BK-' + Math.floor(10000 + Math.random() * 90000);
+            const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
+            const totalDeposit = bookingState.guests * bookingState.depositPerPerson;
+            const fullName = `${bookingState.salutation} ${bookingState.firstName} ${bookingState.lastName}`;
+            const fullPhone = `${bookingState.countryCode} ${bookingState.phone}`;
+            const combinedNotes = [...bookingState.tags, bookingState.notes].filter(Boolean).join(' · ') || 'No special requests';
+            const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
+
+            // Insert new booking record into CRUD state
+            savedBookings.unshift({
+                id: newId,
+                guestName: fullName,
+                phone: fullPhone,
+                email: bookingState.email,
+                guests: bookingState.guests,
+                date: bookingState.date,
+                time: `${periodLabel} ${bookingState.time}`,
+                seat: bookingState.seatName,
+                deposit: totalDeposit,
+                notes: combinedNotes
+            });
+
+            renderBookingsList();
+
+            // Populate Step 4 Email Notification Preview
+            document.getElementById('confirmed-booking-id').innerText = newId;
+            document.getElementById('email-preview-id').innerText = newId;
+            document.getElementById('email-preview-to').innerText = bookingState.email;
+            document.getElementById('email-preview-guest').innerText = fullName;
+            document.getElementById('email-preview-datetime').innerText = `${bookingState.date} ${periodLabel} at ${bookingState.time}`;
+            document.getElementById('email-preview-seat').innerText = `${guestLabel} · ${bookingState.seatName}`;
+            document.getElementById('email-preview-deposit').innerText = `HK$ ${totalDeposit.toLocaleString()} (Deposit Authorized)`;
+            document.getElementById('email-preview-notes').innerText = combinedNotes;
+
+            goToStep(4);
+            showToast(`Reservation confirmed! Email sent to ${bookingState.email}`);
+        }
+
+        function resendEmailToast() {
+            showToast(`Confirmation email resent to ${bookingState.email}`);
+        }
+
+        function resetBookingFlow() {
+            document.getElementById('agree-policy-checkbox').checked = false;
+            togglePolicyConfirmBtn();
+            goToStep(1);
+        }
+
+        // ==================== Top Navigation Tab Switching ====================
+        function switchTab(tabName) {
+            ['booking', 'menu', 'location', 'manage'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) {
+                    navBtn.className = 'nav-btn hover:text-obsidian py-1 transition-colors flex items-center gap-1.5';
+                }
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) {
+                activeNav.className = 'nav-btn text-obsidian border-b-2 border-gold-600 py-1 font-semibold transition-colors flex items-center gap-1.5';
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // ==================== CRUD Booking Management Functions (Read / Update / Delete) ====================
+        function renderBookingsList() {
+            const container = document.getElementById('crud-bookings-container');
+            const badge = document.getElementById('booking-count-badge');
+            badge.innerText = savedBookings.length;
+
+            const keyword = (document.getElementById('crud-search-input')?.value || '').toLowerCase();
+            const seatFilter = document.getElementById('crud-filter-seat')?.value || 'all';
+
+            const filtered = savedBookings.filter(b => {
+                const matchKeyword = b.id.toLowerCase().includes(keyword) ||
+                    b.guestName.toLowerCase().includes(keyword) ||
+                    b.phone.toLowerCase().includes(keyword);
+                const matchSeat = seatFilter === 'all' || b.seat.includes(seatFilter);
+                return matchKeyword && matchSeat;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-stone-50 rounded-2xl border border-stone-200/60 text-stone-400 text-sm">
+                        No matching reservation records found.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(b => `
+                <div class="p-5 rounded-2xl border border-stone-200 hover:border-gold-400 bg-white transition-all flex flex-col md:flex-row justify-between gap-4">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center gap-2.5">
+                            <span class="font-mono text-xs font-bold bg-obsidian text-gold-300 px-2.5 py-1 rounded">${b.id}</span>
+                            <span class="font-semibold text-obsidian text-base">${b.guestName}</span>
+                            <span class="text-xs text-stone-500">${b.phone}</span>
+                        </div>
+                        <div class="text-xs sm:text-sm text-stone-700 font-medium">
+                            <i class="fa-regular fa-calendar text-gold-600 mr-1"></i> ${b.date} · ${b.time} &nbsp;|&nbsp;
+                            <i class="fa-solid fa-chair text-gold-600 mr-1"></i> ${b.guests} Guests · ${b.seat}
+                        </div>
+                        <div class="text-xs text-stone-500">
+                            <strong>Notes:</strong> ${b.notes} · <strong class="text-emerald-700">Deposit Paid: HK$ ${b.deposit}</strong>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openEditModal('${b.id}')" class="px-4 py-2 rounded-xl border border-stone-200 hover:border-obsidian text-xs font-medium text-obsidian transition-colors">
+                            <i class="fa-regular fa-pen-to-square mr-1"></i> Modify (Update)
+                        </button>
+                        <button onclick="deleteBooking('${b.id}')" class="px-4 py-2 rounded-xl border border-red-200 hover:bg-red-50 text-xs font-medium text-red-600 transition-colors">
+                            <i class="fa-regular fa-trash-can mr-1"></i> Cancel (Delete)
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resetCrudSearch() {
+            document.getElementById('crud-search-input').value = '';
+            document.getElementById('crud-filter-seat').value = 'all';
+            renderBookingsList();
+        }
+
+        function openEditModal(id) {
+            const target = savedBookings.find(b => b.id === id);
+            if (!target) return;
+            document.getElementById('edit-booking-id').value = target.id;
+            document.getElementById('edit-date').value = target.date;
+            document.getElementById('edit-guests').value = target.guests;
+            document.getElementById('edit-phone').value = target.phone;
+            document.getElementById('edit-notes').value = target.notes;
+            document.getElementById('edit-booking-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-booking-modal').classList.add('hidden');
+        }
+
+        function saveEditedBooking(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-booking-id').value;
+            const target = savedBookings.find(b => b.id === id);
+            if (target) {
+                target.date = document.getElementById('edit-date').value;
+                target.time = document.getElementById('edit-time').value;
+                target.guests = parseInt(document.getElementById('edit-guests').value, 10);
+                target.phone = document.getElementById('edit-phone').value;
+                target.notes = document.getElementById('edit-notes').value;
+            }
+            closeEditModal();
+            renderBookingsList();
+            showToast(`Reservation ${id} updated successfully!`);
+        }
+
+        function deleteBooking(id) {
+            savedBookings = savedBookings.filter(b => b.id !== id);
+            renderBookingsList();
+            showToast(`Reservation ${id} has been cancelled and removed.`);
+        }
+
+        // ==================== Concierge Inquiry & User Authentication Modals ====================
+        function openInquiryModal() {
+            document.getElementById('inquiry-modal').classList.remove('hidden');
+        }
+        function closeInquiryModal() {
+            document.getElementById('inquiry-modal').classList.add('hidden');
+        }
+        function submitInquiry(e) {
+            e.preventDefault();
+            closeInquiryModal();
+            showToast('Inquiry sent! Our concierge team will reply within 2 hours.');
+        }
+
+        function toggleLoginModal() {
+            document.getElementById('login-modal').classList.toggle('hidden');
+        }
+        function handleUserLogin(e) {
+            e.preventDefault();
+            const val = document.getElementById('login-username-input').value;
+            document.getElementById('current-username').innerText = val;
+            toggleLoginModal();
+            showToast(`Welcome back, ${val}`);
+        }
+        function handleLogout() {
+            document.getElementById('current-username').innerText = 'Guest (Signed Out)';
+            toggleLoginModal();
+            showToast('You have been safely signed out.');
+        }
+
+        // ==================== Toast Notification Helper ====================
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
