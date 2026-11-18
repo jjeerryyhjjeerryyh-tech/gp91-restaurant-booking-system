@@ -25,12 +25,16 @@ Members 6 (Name):
 4. Technologies Used 
 Web Framework:
 Express.js
+
 Database:
 MongoDB (Node.js Driver)
+
 Template Engine:
 EJS
+
 Authentication:
 Cookie-Session
+
 Frontend:
 HTML, CSS
 
