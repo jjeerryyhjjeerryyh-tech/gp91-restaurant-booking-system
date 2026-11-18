@@ -1,5 +1,7 @@
 Restaurant Booking System - Staff Portal
+
 Course:COMP3810SEF (2026 Autumn)  
+
 Group:group91 
 
 1. Project Introduction 
