@@ -8,20 +8,27 @@ The system provides a secure staff login portal,allowing authorized staff to per
 on all customer bookings.Additionally, it provides a set of RESTful APIs for external system integration.
 
 2. Group Members & Roles 
-Members 1 (Li Tin Nok s13175440):Database & Backend Logic (MongoDB Driver, CRUD functions)
+Members 1 (Li Tin Nok s13175440):
+Database & Backend Logic (MongoDB Driver, CRUD functions)
+
 Members 2 (Name):
+
 Members 3 (Name): 
+
 Members 4 (Name): 
+
 Members 5 (Name): 
+
 Members 6 (Name): 
 
-3. Technologies Used 
+
+4. Technologies Used 
 Web Framework:Express.js
 Database:MongoDB (Node.js Driver)
 Template Engine:EJS
 Authentication:Cookie-Session
 Frontend:HTML, CSS
 
-4. Project File Structure
+5. Project File Structure
    
-5. Operation Guide
+6. Operation Guide
