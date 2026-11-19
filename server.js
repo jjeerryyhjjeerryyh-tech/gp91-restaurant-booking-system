@@ -24,7 +24,7 @@ const isLoggedIn = (req, res, next) => {
 
 const getDb = () => client.db(dbName);
 
-// --- database ---
+// --- database functions ---
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
@@ -35,6 +35,10 @@ async function insertReservation(reservationObj) {
 
 async function findAllReservations() {
     return await getDb().collection('reservations').find({}).toArray();
+}
+
+async function findReservationsByUserId(userId) {
+    return await getDb().collection('reservations').find({ userId: new ObjectId(userId) }).toArray();
 }
 
 async function findOneReservationById(resId) {
@@ -52,15 +56,22 @@ async function deleteReservation(resId) {
     return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
 }
 
-// --- web page ---
+// Check if table is already booked at the same time
+async function checkTableConflict(tableNo, reserveDateTime, excludeId = null) {
+    let query = { tableNo: tableNo, reserveDateTime: reserveDateTime };
+    if (excludeId) query._id = { $ne: new ObjectId(excludeId) };
+    const existing = await getDb().collection('reservations').findOne(query);
+    return existing !== null;
+}
+
+// --- web pages ---
 app.get('/login', (req, res) => res.render('login'));
 
 app.post('/login', async (req, res) => {
     const user = await findUserByUsername(req.body.username);
     if (user && user.password === req.body.password) {
         req.session.authenticated = true;
-        req.session.username = user.username;
-        req.session.userId = user._id.toString(); 
+        req.session.user = { id: user._id.toString(), username: user.username, role: user.role };
         res.redirect('/');
     } else {
         res.send('Login failed. <a href="/login">Go back</a>');
@@ -73,20 +84,35 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/', isLoggedIn, async (req, res) => {
-    const bookings = await findAllReservations();
-    res.render('index', { user: req.session.username, bookings: bookings });
+    let bookings;
+    if (req.session.user.role === 'staff') {
+        bookings = await findAllReservations(); // Staff sees all
+    } else {
+        bookings = await findReservationsByUserId(req.session.user.id); // Customer sees own
+    }
+    res.render('index', { user: req.session.user, bookings: bookings });
 });
 
-app.get('/create', isLoggedIn, (req, res) => res.render('create'));
+app.get('/create', isLoggedIn, (req, res) => {
+    if (req.session.user.role === 'staff') return res.send('Staff cannot create. <a href="/">Back</a>');
+    res.render('create');
+});
 
 app.post('/create', isLoggedIn, async (req, res) => {
+    if (req.session.user.role === 'staff') return res.redirect('/');
+    
+    const { tableNo, reserveDateTime } = req.body;
+    if (await checkTableConflict(tableNo, reserveDateTime)) {
+        return res.send('Table is already booked at this time. <a href="/create">Go back</a>');
+    }
+
     await insertReservation({
-        userId: new ObjectId(req.session.userId), 
+        userId: new ObjectId(req.session.user.id), 
         customerName: req.body.customerName,
         mobile: req.body.mobile,
-        reserveDateTime: req.body.reserveDateTime,
+        reserveDateTime: reserveDateTime,
         peopleCount: Number(req.body.peopleCount),
-        tableNo: req.body.tableNo,
+        tableNo: tableNo,
         note: req.body.note
     });
     res.redirect('/');
@@ -94,22 +120,39 @@ app.post('/create', isLoggedIn, async (req, res) => {
 
 app.get('/edit/:id', isLoggedIn, async (req, res) => {
     const booking = await findOneReservationById(req.params.id);
+    if (req.session.user.role === 'staff' || booking.userId.toString() !== req.session.user.id) {
+        return res.send('Permission denied. <a href="/">Back</a>');
+    }
     res.render('edit', { booking: booking });
 });
 
 app.post('/edit/:id', isLoggedIn, async (req, res) => {
+    const booking = await findOneReservationById(req.params.id);
+    if (req.session.user.role === 'staff' || booking.userId.toString() !== req.session.user.id) {
+        return res.redirect('/');
+    }
+
+    const { tableNo, reserveDateTime } = req.body;
+    if (await checkTableConflict(tableNo, reserveDateTime, req.params.id)) {
+        return res.send('Table is already booked at this time. <a href="/edit/' + req.params.id + '">Go back</a>');
+    }
+
     await updateReservation(req.params.id, {
         customerName: req.body.customerName,
         mobile: req.body.mobile,
-        reserveDateTime: req.body.reserveDateTime,
+        reserveDateTime: reserveDateTime,
         peopleCount: Number(req.body.peopleCount),
-        tableNo: req.body.tableNo,
+        tableNo: tableNo,
         note: req.body.note
     });
     res.redirect('/');
 });
 
 app.get('/delete/:id', isLoggedIn, async (req, res) => {
+    const booking = await findOneReservationById(req.params.id);
+    if (req.session.user.role === 'staff' || booking.userId.toString() !== req.session.user.id) {
+        return res.send('Permission denied. <a href="/">Back</a>');
+    }
     await deleteReservation(req.params.id);
     res.redirect('/');
 });
