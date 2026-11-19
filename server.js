@@ -3,7 +3,7 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/";
+const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/"; 
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
@@ -17,7 +17,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 
 }));
 
-
+// Staff authentication middleware
 const isStaff = (req, res, next) => {
     if (req.session.staffAuthenticated) return next();
     res.redirect('/staff/login');
@@ -25,7 +25,7 @@ const isStaff = (req, res, next) => {
 
 const getDb = () => client.db(dbName);
 
-// --- Database operations ---
+// --- Database Functions ---
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
@@ -53,12 +53,14 @@ async function deleteReservation(resId) {
     return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
 }
 
-// customer without login in
+// ==========================================
+// Customer Routes
+// ==========================================
+
 app.get('/', (req, res) => {
     res.render('index');
 });
 
-// Processing customer appointment requests
 app.post('/book', async (req, res) => {
     await insertReservation({
         customerName: req.body.customerName,
@@ -71,8 +73,10 @@ app.post('/book', async (req, res) => {
     res.send('<h2>Reservation Successful!</h2><a href="/">Make another booking</a>');
 });
 
+// ==========================================
+// Staff Routes
+// ==========================================
 
-// Employee login page
 app.get('/staff/login', (req, res) => {
     res.render('login');
 });
@@ -98,7 +102,6 @@ app.get('/staff/dashboard', isStaff, async (req, res) => {
     res.render('dashboard', { staffName: req.session.staffName, bookings: bookings });
 });
 
-//update appointments info------------------------------------------
 app.get('/staff/edit/:id', isStaff, async (req, res) => {
     const booking = await findOneReservationById(req.params.id);
     res.render('edit', { booking: booking });
@@ -115,15 +118,16 @@ app.post('/staff/edit/:id', isStaff, async (req, res) => {
     });
     res.redirect('/staff/dashboard');
 });
-//----------------------------------------------------------
 
 app.get('/staff/delete/:id', isStaff, async (req, res) => {
     await deleteReservation(req.params.id);
     res.redirect('/staff/dashboard');
 });
 
+// ==========================================
+// RESTful API Routes (No Auth Required)
+// ==========================================
 
-// RESTful API 
 app.get('/api/reservations', async (req, res) => {
     res.json(await findAllReservations());
 });
@@ -143,14 +147,10 @@ app.delete('/api/reservations/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-
-// start server
+// Start Server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
-    
-    const server = app.listen(process.env.PORT || 8099, () => {
-        const port = server.address().port;
-        console.log(`Server listening at port ${port}`);
+    app.listen(process.env.PORT || 8099, () => {
+        console.log('Server running at http://localhost:8099');
     });
-    
-}).catch(console.error);
+});
