@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Reservation</title></head>
+<body>
+    <h2>Edit Reservation</h2>
+    <form action="/staff/edit/<%= booking._id %>" method="POST">
+        Name: <input type="text" name="customerName" value="<%= booking.customerName %>" required><br><br>
+        Mobile: <input type="text" name="mobile" value="<%= booking.mobile %>" required><br><br>
+        Date & Time: <input type="text" name="reserveDateTime" value="<%= booking.reserveDateTime %>" required><br><br>
+        People: <input type="number" name="peopleCount" value="<%= booking.peopleCount %>" required><br><br>
+        
+        
+        Table No: 
+        <select name="tableNo" required>
+            <% for(let i = 1; i <= 30; i++) { %>
+                <option value="Table <%= i %>" <%= booking.tableNo === 'Table ' + i ? 'selected' : '' %>>
+                    Table <%= i %>
+                </option>
+            <% } %>
+        </select><br><br>
+
+        Note: <input type="text" name="note" value="<%= booking.note %>"><br><br>
+        
+        <button type="submit">Update Reservation</button>
+    </form>
+    <br>
+    <a href="/staff/dashboard">Back to Dashboard</a>
+</body>
+</html>

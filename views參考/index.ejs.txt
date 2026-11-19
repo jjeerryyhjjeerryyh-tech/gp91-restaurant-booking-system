@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><title>Restaurant Reservation</title></head>
+<body>
+    <div style="text-align: right;">
+        <a href="/my-bookings"><button>Check My Bookings</button></a>
+        <a href="/staff/login"><button>Staff Login</button></a>
+    </div>
+    
+    <h2>Book a Table</h2>
+    <form action="/book" method="POST">
+        Name: <input type="text" name="customerName" required><br><br>
+        Mobile: <input type="text" name="mobile" required><br><br>
+        Date & Time: <input type="text" name="reserveDateTime" placeholder="2026-11-15 19:30" required><br><br>
+        People: <input type="number" name="peopleCount" required><br><br>
+        
+       
+        Table No: 
+        <select name="tableNo" required>
+            <option value="">-- Select a Table --</option>
+            <% for(let i = 1; i <= 30; i++) { %>
+                <option value="Table <%= i %>">Table <%= i %></option>
+            <% } %>
+        </select><br><br>
+
+        Note: <input type="text" name="note"><br><br>
+        <button type="submit">Submit Reservation</button>
+    </form>
+</body>
+</html>

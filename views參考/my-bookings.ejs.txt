@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><title>My Bookings</title></head>
+<body>
+    <div style="text-align: right;">
+        <a href="/">Back to Home</a>
+    </div>
+
+    <h2>Check My Bookings</h2>
+    
+    <form action="/my-bookings" method="GET">
+        Enter your Mobile Number: 
+        <input type="text" name="mobile" value="<%= mobile || '' %>" required>
+        <button type="submit">Search</button>
+    </form>
+    
+    <hr>
+
+    <% if (mobile) { %>
+        <h3>Results for: <%= mobile %></h3>
+        
+        <% if (bookings.length > 0) { %>
+            <table border="1" cellpadding="5">
+                <tr>
+                    <th>Name</th>
+                    <th>Date & Time</th>
+                    <th>People</th>
+                    <th>Table</th>
+                    <th>Note</th>
+                </tr>
+                <% bookings.forEach(b => { %>
+                    <tr>
+                        <td><%= b.customerName %></td>
+                        <td><%= b.reserveDateTime %></td>
+                        <td><%= b.peopleCount %></td>
+                        <td><%= b.tableNo %></td>
+                        <td><%= b.note %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        <% } else { %>
+            <p style="color: red;">No bookings found for this mobile number.</p>
+        <% } %>
+    <% } %>
+</body>
+</html>

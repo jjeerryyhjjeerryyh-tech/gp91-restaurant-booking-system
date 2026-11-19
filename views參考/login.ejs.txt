@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Staff Login</title></head>
+<body>
+    <h2>Staff Portal Login</h2>
+    <form action="/staff/login" method="POST">
+        Username: <input type="text" name="username" required><br><br>
+        Password: <input type="password" name="password" required><br><br>
+        <button type="submit">Login</button>
+    </form>
+    <br>
+    <a href="/">Back to Customer Page</a>
+</body>
+</html>
