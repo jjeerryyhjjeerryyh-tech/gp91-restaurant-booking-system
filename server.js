@@ -134,6 +134,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
+//start server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
     app.listen(process.env.PORT || 8099, () => {
