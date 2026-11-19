@@ -137,11 +137,8 @@ app.delete('/api/reservations/:id', async (req, res) => {
 //start server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
-    
-    const server = app.listen(process.env.PORT || 8099, () => {
-        const port = server.address().port;
-        console.log(`Server listening at port ${port}`);
+    app.listen(process.env.PORT || 8099, () => {
+        console.log('Server running at http://localhost:8099');
     });
-    
-}).catch(console.error);
+});
 
