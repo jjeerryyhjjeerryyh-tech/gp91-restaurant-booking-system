@@ -3,7 +3,7 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/"; 
+const url = "YOUR_MONGODB_CONNECTION_STRING"; 
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
@@ -11,13 +11,13 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+//Cookie-Session for Staff Authentication
 app.use(session({
     name: 'session',
     keys: ['secret-key-1', 'secret-key-2'],
     maxAge: 24 * 60 * 60 * 1000 
 }));
 
-// Staff authentication middleware
 const isStaff = (req, res, next) => {
     if (req.session.staffAuthenticated) return next();
     res.redirect('/staff/login');
@@ -25,7 +25,7 @@ const isStaff = (req, res, next) => {
 
 const getDb = () => client.db(dbName);
 
-// --- Database Functions ---
+// [Lecture 5] Database Operations
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
@@ -36,6 +36,10 @@ async function insertReservation(reservationObj) {
 
 async function findAllReservations() {
     return await getDb().collection('reservations').find({}).toArray();
+}
+
+async function findReservationsByMobile(mobile) {
+    return await getDb().collection('reservations').find({ mobile: mobile }).toArray();
 }
 
 async function findOneReservationById(resId) {
@@ -70,7 +74,16 @@ app.post('/book', async (req, res) => {
         tableNo: req.body.tableNo,
         note: req.body.note
     });
-    res.send('<h2>Reservation Successful!</h2><a href="/">Make another booking</a>');
+    res.redirect(`/my-bookings?mobile=${req.body.mobile}`);
+});
+
+app.get('/my-bookings', async (req, res) => {
+    const mobile = req.query.mobile;
+    let bookings = [];
+    if (mobile) {
+        bookings = await findReservationsByMobile(mobile);
+    }
+    res.render('my-bookings', { mobile: mobile, bookings: bookings });
 });
 
 // ==========================================
@@ -125,7 +138,7 @@ app.get('/staff/delete/:id', isStaff, async (req, res) => {
 });
 
 // ==========================================
-// RESTful API Routes (No Auth Required)
+// RESTful API (Lecture 8)
 // ==========================================
 
 app.get('/api/reservations', async (req, res) => {
