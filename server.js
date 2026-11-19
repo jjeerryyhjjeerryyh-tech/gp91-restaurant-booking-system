@@ -74,11 +74,13 @@ app.post('/book', async (req, res) => {
         tableNo: req.body.tableNo,
         note: req.body.note
     });
+    // Redirect the customer to a page to view their bookings using their mobile number
     res.redirect(`/my-bookings?mobile=${req.body.mobile}`);
 });
 
+// GET: Render the page for customers to view their bookings
 app.get('/my-bookings', async (req, res) => {
-    const mobile = req.query.mobile;
+    const mobile = req.query.mobile;// Get mobile number from the URL query string
     let bookings = [];
     if (mobile) {
         bookings = await findReservationsByMobile(mobile);
