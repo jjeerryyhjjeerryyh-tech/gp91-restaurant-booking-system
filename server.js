@@ -3,7 +3,7 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "";
+const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/";
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
@@ -53,22 +53,87 @@ async function deleteReservation(resId) {
     return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+app.get('/login', (req, res) => res.render('login'));
 
+app.post('/login', async (req, res) => {
+    const user = await findUserByUsername(req.body.username);
+    if (user && user.password === req.body.password) {
+        req.session.authenticated = true;
+        req.session.username = user.username;
+        res.redirect('/');
+    } else {
+        res.send('Login failed. <a href="/login">Go back</a>');
+    }
+});
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+app.get('/logout', (req, res) => {
+    req.session = null;
+    res.redirect('/login');
+});
+
+app.get('/', isLoggedIn, async (req, res) => {
+    const bookings = await findAllReservations();
+    res.render('index', { user: req.session.username, bookings: bookings });
+});
+
+app.get('/create', isLoggedIn, (req, res) => res.render('create'));
+
+app.post('/create', isLoggedIn, async (req, res) => {
+    await insertReservation({
+        customerName: req.body.customerName,
+        phone: req.body.phone,
+        restaurantName: req.body.restaurantName,
+        date: req.body.date,
+        guests: req.body.guests
+    });
+    res.redirect('/');
+});
+
+app.get('/edit/:id', isLoggedIn, async (req, res) => {
+    const booking = await findOneReservationById(req.params.id);
+    res.render('edit', { booking: booking });
+});
+
+app.post('/edit/:id', isLoggedIn, async (req, res) => {
+    await updateReservation(req.params.id, {
+        customerName: req.body.customerName,
+        phone: req.body.phone,
+        restaurantName: req.body.restaurantName,
+        date: req.body.date,
+        guests: req.body.guests
+    });
+    res.redirect('/');
+});
+
+app.get('/delete/:id', isLoggedIn, async (req, res) => {
+    await deleteReservation(req.params.id);
+    res.redirect('/');
+});
+
+app.get('/api/reservations', async (req, res) => {
+    res.json(await findAllReservations());
+});
+
+app.post('/api/reservations', async (req, res) => {
+    await insertReservation(req.body);
+    res.json({ message: "Created" });
+});
+
+app.put('/api/reservations/:id', async (req, res) => {
+    await updateReservation(req.params.id, req.body);
+    res.json({ message: "Updated" });
+});
+
+app.delete('/api/reservations/:id', async (req, res) => {
+    await deleteReservation(req.params.id);
+    res.json({ message: "Deleted" });
 });
 
 
-
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //start server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
