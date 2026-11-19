@@ -17,13 +17,15 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 
 }));
 
-const isLoggedIn = (req, res, next) => {
-    if (req.session.authenticated) return next();
-    res.redirect('/login');
+
+const isStaff = (req, res, next) => {
+    if (req.session.staffAuthenticated) return next();
+    res.redirect('/staff/login');
 };
 
 const getDb = () => client.db(dbName);
 
+// --- Database operations ---
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
@@ -51,21 +53,79 @@ async function deleteReservation(resId) {
     return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
 }
 
+// customer without login in
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+// Processing customer appointment requests
+app.post('/book', async (req, res) => {
+    await insertReservation({
+        customerName: req.body.customerName,
+        mobile: req.body.mobile,
+        reserveDateTime: req.body.reserveDateTime,
+        peopleCount: Number(req.body.peopleCount),
+        tableNo: req.body.tableNo,
+        note: req.body.note
+    });
+    res.send('<h2>Reservation Successful!</h2><a href="/">Make another booking</a>');
+});
 
 
+// Employee login page
+app.get('/staff/login', (req, res) => {
+    res.render('login');
+});
+
+app.post('/staff/login', async (req, res) => {
+    const user = await findUserByUsername(req.body.username);
+    if (user && user.password === req.body.password) {
+        req.session.staffAuthenticated = true;
+        req.session.staffName = user.username;
+        res.redirect('/staff/dashboard');
+    } else {
+        res.send('Login failed. <a href="/staff/login">Go back</a>');
+    }
+});
+
+app.get('/staff/logout', (req, res) => {
+    req.session = null;
+    res.redirect('/staff/login');
+});
+
+app.get('/staff/dashboard', isStaff, async (req, res) => {
+    const bookings = await findAllReservations();
+    res.render('dashboard', { staffName: req.session.staffName, bookings: bookings });
+});
+
+app.get('/staff/delete/:id', isStaff, async (req, res) => {
+    await deleteReservation(req.params.id);
+    res.redirect('/staff/dashboard');
+});
 
 
+// RESTful API 
+app.get('/api/reservations', async (req, res) => {
+    res.json(await findAllReservations());
+});
+
+app.post('/api/reservations', async (req, res) => {
+    await insertReservation(req.body);
+    res.json({ message: "Created" });
+});
+
+app.put('/api/reservations/:id', async (req, res) => {
+    await updateReservation(req.params.id, req.body);
+    res.json({ message: "Updated" });
+});
+
+app.delete('/api/reservations/:id', async (req, res) => {
+    await deleteReservation(req.params.id);
+    res.json({ message: "Deleted" });
+});
 
 
-
-
-
-
-
-
-
-
-//start server
+// start server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
     
@@ -75,4 +135,3 @@ client.connect().then(() => {
     });
     
 }).catch(console.error);
-
