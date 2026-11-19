@@ -14,9 +14,10 @@ Members 1 (Li Tin Nok s13175440):
 Database & Backend Logic (MongoDB Driver, CRUD functions)
 
 Members 2 (Chen Hiu Chung - s1431291):
-UI design for the webpage
+UI design of the webpage
 
-Members 3 (Name): 
+Members 3 (Wu Yu Han s1457322): 
+The theme design direction of the webpage
 
 Members 4 (Name): 
 
