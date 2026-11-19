@@ -3,7 +3,7 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "YOUR_MONGODB_CONNECTION_STRING"; 
+const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/"; 
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
