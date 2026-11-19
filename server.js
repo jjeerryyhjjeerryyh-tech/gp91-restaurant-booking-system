@@ -3,15 +3,13 @@ const session = require('cookie-session');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/";
+const url = "mongodb+srv://123456:tkp123456@cluster0.c1lsxgb.mongodb.net/"; 
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-app.use(express.static('public'));
 
 app.use(session({
     name: 'session',
@@ -26,6 +24,7 @@ const isLoggedIn = (req, res, next) => {
 
 const getDb = () => client.db(dbName);
 
+// --- database ---
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
@@ -53,9 +52,7 @@ async function deleteReservation(resId) {
     return await getDb().collection('reservations').deleteOne({ _id: new ObjectId(resId) });
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+// --- web page ---
 app.get('/login', (req, res) => res.render('login'));
 
 app.post('/login', async (req, res) => {
@@ -63,6 +60,7 @@ app.post('/login', async (req, res) => {
     if (user && user.password === req.body.password) {
         req.session.authenticated = true;
         req.session.username = user.username;
+        req.session.userId = user._id.toString(); 
         res.redirect('/');
     } else {
         res.send('Login failed. <a href="/login">Go back</a>');
@@ -83,11 +81,13 @@ app.get('/create', isLoggedIn, (req, res) => res.render('create'));
 
 app.post('/create', isLoggedIn, async (req, res) => {
     await insertReservation({
+        userId: new ObjectId(req.session.userId), 
         customerName: req.body.customerName,
-        phone: req.body.phone,
-        restaurantName: req.body.restaurantName,
-        date: req.body.date,
-        guests: req.body.guests
+        mobile: req.body.mobile,
+        reserveDateTime: req.body.reserveDateTime,
+        peopleCount: Number(req.body.peopleCount),
+        tableNo: req.body.tableNo,
+        note: req.body.note
     });
     res.redirect('/');
 });
@@ -100,10 +100,11 @@ app.get('/edit/:id', isLoggedIn, async (req, res) => {
 app.post('/edit/:id', isLoggedIn, async (req, res) => {
     await updateReservation(req.params.id, {
         customerName: req.body.customerName,
-        phone: req.body.phone,
-        restaurantName: req.body.restaurantName,
-        date: req.body.date,
-        guests: req.body.guests
+        mobile: req.body.mobile,
+        reserveDateTime: req.body.reserveDateTime,
+        peopleCount: Number(req.body.peopleCount),
+        tableNo: req.body.tableNo,
+        note: req.body.note
     });
     res.redirect('/');
 });
@@ -113,6 +114,7 @@ app.get('/delete/:id', isLoggedIn, async (req, res) => {
     res.redirect('/');
 });
 
+// --- RESTful API ---
 app.get('/api/reservations', async (req, res) => {
     res.json(await findAllReservations());
 });
@@ -132,9 +134,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
     res.json({ message: "Deleted" });
 });
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//start server
 client.connect().then(() => {
     console.log("Connected to MongoDB successfully");
     app.listen(process.env.PORT || 8099, () => {
