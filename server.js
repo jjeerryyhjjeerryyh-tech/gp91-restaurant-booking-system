@@ -98,6 +98,25 @@ app.get('/staff/dashboard', isStaff, async (req, res) => {
     res.render('dashboard', { staffName: req.session.staffName, bookings: bookings });
 });
 
+//update appointments info------------------------------------------
+app.get('/staff/edit/:id', isStaff, async (req, res) => {
+    const booking = await findOneReservationById(req.params.id);
+    res.render('edit', { booking: booking });
+});
+
+app.post('/staff/edit/:id', isStaff, async (req, res) => {
+    await updateReservation(req.params.id, {
+        customerName: req.body.customerName,
+        mobile: req.body.mobile,
+        reserveDateTime: req.body.reserveDateTime,
+        peopleCount: Number(req.body.peopleCount),
+        tableNo: req.body.tableNo,
+        note: req.body.note
+    });
+    res.redirect('/staff/dashboard');
+});
+//----------------------------------------------------------
+
 app.get('/staff/delete/:id', isStaff, async (req, res) => {
     await deleteReservation(req.params.id);
     res.redirect('/staff/dashboard');
