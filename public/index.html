@@ -61,11 +61,6 @@
             background: #d0a361;
             border-radius: 3px;
         }
-        .step-active {
-            border-color: #b07634;
-            color: #121316;
-            font-weight: 600;
-        }
         .card-shadow {
             box-shadow: 0 10px 30px -5px rgba(18, 19, 22, 0.05);
         }
@@ -73,7 +68,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased selection:bg-gold-200 selection:text-obsidian">
 
-    <!-- Top Navigation Bar (Includes Login/Logout & CRUD Management Entry for COMP3810SEF) -->
+    <!-- Top Navigation Bar (Includes Staff Login/Logout & Customer/Staff CRUD Entry for COMP3810SEF) -->
     <header class="sticky top-0 z-40 bg-alabaster/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo -->
@@ -93,19 +88,17 @@
                 <button onclick="switchTab('menu')" id="nav-menu" class="nav-btn hover:text-obsidian py-1 transition-colors">Culinary Showcase</button>
                 <button onclick="switchTab('location')" id="nav-location" class="nav-btn hover:text-obsidian py-1 transition-colors">Location & Contact</button>
                 <button onclick="switchTab('manage')" id="nav-manage" class="nav-btn hover:text-obsidian py-1 transition-colors flex items-center gap-1.5">
-                    <span>My Bookings (CRUD)</span>
-                    <span id="booking-count-badge" class="bg-gold-100 text-gold-700 text-xs px-2 py-0.5 rounded-full font-semibold">2</span>
+                    <span>My Bookings / Staff Portal</span>
+                    <span id="booking-count-badge" class="bg-gold-100 text-gold-700 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
                 </button>
             </nav>
 
-            <!-- User Authentication Status (Meets COMP3810SEF Login/Logout Requirement) -->
+            <!-- Staff Authentication Status (Connected to Express cookie-session & MongoDB users) -->
             <div class="flex items-center space-x-4">
-                <div id="user-logged-in" class="flex items-center space-x-3 bg-white px-3.5 py-1.5 rounded-full border border-stone-200 shadow-sm">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span class="text-xs font-medium text-stone-700" id="current-username">David Chan (VIP)</span>
-                    <button onclick="toggleLoginModal()" class="text-xs text-stone-400 hover:text-red-600 transition-colors ml-2" title="Logout / Switch Account">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    </button>
+                <div id="user-logged-in" onclick="toggleLoginModal()" class="cursor-pointer flex items-center space-x-2.5 bg-white px-3.5 py-1.5 rounded-full border border-stone-200 hover:border-gold-500 shadow-sm transition-all">
+                    <div id="auth-status-dot" class="w-2 h-2 rounded-full bg-stone-400"></div>
+                    <span class="text-xs font-medium text-stone-700" id="current-username">Staff Login</span>
+                    <i id="auth-status-icon" class="fa-solid fa-right-to-bracket text-xs text-stone-400"></i>
                 </div>
                 <!-- Mobile Menu Button -->
                 <button onclick="toggleMobileMenu()" class="md:hidden text-obsidian p-2 rounded-lg hover:bg-stone-200/50">
@@ -119,7 +112,7 @@
             <button onclick="switchTab('booking'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium bg-gold-50 text-gold-700">Reservations</button>
             <button onclick="switchTab('menu'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">Culinary Showcase</button>
             <button onclick="switchTab('location'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">Location & Contact</button>
-            <button onclick="switchTab('manage'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">My Bookings (CRUD)</button>
+            <button onclick="switchTab('manage'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50">My Bookings / Staff Portal</button>
         </div>
     </header>
 
@@ -259,7 +252,7 @@
                                 <!-- Seating Zone Cards -->
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
                                     <!-- Harbour View Window -->
-                                    <div onclick="selectSeat('Harbour View Window (Table W1)', 'window', 500)" id="seat-card-window" class="seat-option cursor-pointer p-3.5 rounded-xl border border-gold-500 bg-gold-500/10 transition-all text-left flex flex-col justify-between">
+                                    <div onclick="selectSeat('Harbour View Window (Table W1)', 'window', 500)" id="seat-card-window" class="seat-option cursor-pointer p-3.5 rounded-xl border border-gold-500 bg-gold-500/15 transition-all text-left flex flex-col justify-between">
                                         <div>
                                             <div class="flex justify-between items-center">
                                                 <span class="text-xs font-semibold text-gold-300">Harbour View Window</span>
@@ -330,7 +323,7 @@
                         </div>
                     </div>
 
-                    <!-- [STEP 2: Guest Contact Information (Salutation, First/Last Name, Region Code, Phone, Email, Special Notes)] -->
+                    <!-- [STEP 2: Guest Contact Information] -->
                     <div id="booking-step-2" class="hidden space-y-6">
                         <div class="border-b border-stone-100 pb-4 flex items-center justify-between">
                             <div>
@@ -378,12 +371,12 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Last Name (Surname) *</label>
-                                    <input type="text" id="guest-lastname" required placeholder="e.g., Chan" value="Chan" oninput="updateSummary()"
+                                    <input type="text" id="guest-lastname" required placeholder="e.g., Chan" oninput="updateSummary()"
                                         class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">First Name (Given Name) *</label>
-                                    <input type="text" id="guest-firstname" required placeholder="e.g., David" value="David" oninput="updateSummary()"
+                                    <input type="text" id="guest-firstname" required placeholder="e.g., Alex" oninput="updateSummary()"
                                         class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
                                 </div>
                             </div>
@@ -403,13 +396,13 @@
                                             <option value="+44">🇬🇧 United Kingdom (+44)</option>
                                             <option value="+1">🇺🇸 USA / Canada (+1)</option>
                                         </select>
-                                        <input type="tel" id="guest-phone" required placeholder="9123 4567" value="98765432" oninput="updateSummary()"
+                                        <input type="tel" id="guest-phone" required placeholder="9123 4567" oninput="updateSummary()"
                                             class="w-full px-3.5 py-3 outline-none text-sm">
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs uppercase tracking-wider text-stone-500 font-semibold mb-2">Email Address (for Confirmation) *</label>
-                                    <input type="email" id="guest-email" required placeholder="example@domain.com" value="david.chan@example.com" oninput="updateSummary()"
+                                    <input type="email" id="guest-email" required placeholder="example@domain.com" oninput="updateSummary()"
                                         class="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-gold-600 focus:ring-2 focus:ring-gold-500/20 outline-none text-sm">
                                 </div>
                             </div>
@@ -471,15 +464,15 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                                 <div>
                                     <span class="text-xs text-stone-400 block">Guest Name</span>
-                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-name">Mr. David Chan</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-name">-</span>
                                 </div>
                                 <div>
                                     <span class="text-xs text-stone-400 block">Contact Phone</span>
-                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-phone">+852 98765432</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block" id="review-phone">-</span>
                                 </div>
                                 <div>
                                     <span class="text-xs text-stone-400 block">Email Address</span>
-                                    <span class="font-semibold text-obsidian mt-0.5 block truncate" id="review-email">david.chan@example.com</span>
+                                    <span class="font-semibold text-obsidian mt-0.5 block truncate" id="review-email">-</span>
                                 </div>
                                 <div>
                                     <span class="text-xs text-stone-400 block">Party & Seating</span>
@@ -525,23 +518,23 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs text-stone-500 mb-1">Cardholder Name</label>
-                                    <input type="text" value="DAVID CHAN" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm uppercase">
+                                    <input type="text" placeholder="CARDHOLDER NAME" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm uppercase">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-stone-500 mb-1">Card Number</label>
                                     <div class="relative">
-                                        <input type="text" value="4532 •••• •••• 8891" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                        <input type="text" placeholder="0000 0000 0000 0000" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
                                         <i class="fa-solid fa-lock absolute right-3.5 top-3 text-stone-400 text-xs"></i>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs text-stone-500 mb-1">Expiry Date (MM/YY)</label>
-                                        <input type="text" value="08/29" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                        <input type="text" placeholder="MM/YY" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-stone-500 mb-1">Security Code (CVV)</label>
-                                        <input type="password" value="888" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
+                                        <input type="password" placeholder="CVV" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-sm font-mono">
                                     </div>
                                 </div>
                             </div>
@@ -593,11 +586,11 @@
                             </div>
                             <div class="p-5 sm:p-6 space-y-4 text-xs sm:text-sm bg-white m-3 rounded-xl border border-stone-100 shadow-sm">
                                 <div class="border-b border-stone-100 pb-3 space-y-1 text-xs text-stone-500">
-                                    <div><strong class="text-stone-700">To:</strong> <span id="email-preview-to">david.chan@example.com</span></div>
+                                    <div><strong class="text-stone-700">To:</strong> <span id="email-preview-to">-</span></div>
                                     <div><strong class="text-stone-700">Subject:</strong> [L'ÉCLAT Hong Kong] Your Reservation Confirmation & E-Voucher (<span id="email-preview-id">BK-89241</span>)</div>
                                 </div>
                                 <div class="space-y-2 text-stone-700 leading-relaxed">
-                                    <p>Dear <strong id="email-preview-guest" class="text-obsidian">Mr. David Chan</strong>,</p>
+                                    <p>Dear <strong id="email-preview-guest" class="text-obsidian">Guest</strong>,</p>
                                     <p>Thank you for choosing <strong>L'ÉCLAT</strong>. It is our pleasure to confirm your table reservation for <strong id="email-preview-datetime" class="text-gold-700">2026-11-20 Dinner at 19:30</strong>.</p>
                                     <div class="bg-stone-50 p-3.5 rounded-lg border border-stone-200/70 text-xs space-y-1 my-2">
                                         <div>• <strong>Reserved Seating:</strong> <span id="email-preview-seat">2 Guests · Harbour View Window (Table W1)</span></div>
@@ -605,7 +598,7 @@
                                         <div>• <strong>Special Notes:</strong> <span id="email-preview-notes">No special requests</span></div>
                                         <div>• <strong>Location:</strong> Suite 5501, 55/F, Two International Finance Centre, Central, Hong Kong</div>
                                     </div>
-                                    <p class="text-xs text-stone-400">Should you need to modify or cancel your reservation, please visit the "My Bookings (CRUD)" portal at least 24 hours prior to your dining time.</p>
+                                    <p class="text-xs text-stone-400">Should you need to view your booking, visit "My Bookings / Staff Portal" and search with your mobile number.</p>
                                 </div>
                             </div>
                         </div>
@@ -615,7 +608,7 @@
                                 <i class="fa-regular fa-paper-plane"></i> Resend Confirmation Email
                             </button>
                             <button type="button" onclick="switchTab('manage')" class="px-6 py-3 rounded-xl bg-obsidian text-white hover:bg-stone-800 text-xs font-medium flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-list-check text-gold-400"></i> Manage Booking in CRUD Portal
+                                <i class="fa-solid fa-list-check text-gold-400"></i> View My Bookings
                             </button>
                             <button type="button" onclick="resetBookingFlow()" class="px-5 py-3 rounded-xl bg-gold-50 text-gold-700 hover:bg-gold-100 text-xs font-medium">
                                 Make Another Reservation
@@ -646,15 +639,13 @@
                                     <span class="font-medium text-white" id="summary-guests">2 Guests</span>
                                 </div>
                             </div>
-
                             <div class="flex items-start gap-3">
-                                <i class="fa-regular fa-calendar-check text-gold-400 mt-1 w-4 text-center"></i>
+                                <i class="fa-regular fa-calendar text-gold-400 mt-1 w-4 text-center"></i>
                                 <div>
                                     <span class="text-xs text-stone-400 block">Date & Time</span>
                                     <span class="font-medium text-white" id="summary-datetime">2026-11-20 · Dinner 19:30</span>
                                 </div>
                             </div>
-
                             <div class="flex items-start gap-3">
                                 <i class="fa-solid fa-chair text-gold-400 mt-1 w-4 text-center"></i>
                                 <div>
@@ -662,51 +653,54 @@
                                     <span class="font-medium text-gold-300" id="summary-seat">Harbour View Window (Table W1)</span>
                                 </div>
                             </div>
-
                             <div class="flex items-start gap-3">
-                                <i class="fa-regular fa-id-badge text-gold-400 mt-1 w-4 text-center"></i>
+                                <i class="fa-regular fa-user text-gold-400 mt-1 w-4 text-center"></i>
                                 <div>
                                     <span class="text-xs text-stone-400 block">Primary Guest</span>
-                                    <span class="font-medium text-white" id="summary-guest-name">Mr. David Chan (+852 98765432)</span>
+                                    <span class="font-medium text-stone-200 text-xs" id="summary-guest-name">Not entered yet</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-6 pt-4 border-t border-stone-800 flex items-center justify-between">
-                            <div>
-                                <span class="text-xs text-stone-400 block">Deposit (Deductible)</span>
-                                <span class="text-[11px] text-stone-500" id="summary-deposit-calc">HK$ 500 x 2 Guests</span>
+                        <div class="mt-6 pt-4 border-t border-stone-800 space-y-2">
+                            <div class="flex justify-between text-xs text-stone-400">
+                                <span>Table Deposit</span>
+                                <span id="summary-deposit-calc">HK$ 500 x 2 Guests</span>
                             </div>
-                            <span class="font-luxury text-2xl font-bold text-gold-400" id="summary-total">HK$ 1,000</span>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs uppercase tracking-wider text-stone-300">Total Deposit</span>
+                                <span class="font-luxury text-2xl font-bold text-gold-300" id="summary-total">HK$ 1,000</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Quick Location & Concierge Info Card -->
-                    <div class="bg-white rounded-2xl border border-stone-200/80 p-5 card-shadow space-y-4">
-                        <h4 class="font-luxury text-lg font-semibold text-obsidian flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot text-gold-600 text-sm"></i> Location & Concierge
-                        </h4>
-                        <div class="text-xs text-stone-600 space-y-2 leading-relaxed">
-                            <p><strong>Address:</strong> Suite 5501, 55/F, Two IFC, 8 Finance Street, Central, Hong Kong</p>
-                            <p><strong>Opening Hours:</strong><br>Lunch 12:00 – 15:00 | Dinner 18:00 – 23:00</p>
-                            <p><strong>Direct Line:</strong> +852 2888 9191</p>
-                            <p><strong>WhatsApp Concierge:</strong> +852 6888 9191</p>
+                    <!-- Quick Concierge & Restaurant Info Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-stone-200/80 card-shadow space-y-4">
+                        <h4 class="font-luxury text-xl font-semibold text-obsidian">Concierge & Hours</h4>
+                        <div class="space-y-3 text-xs text-stone-600">
+                            <div class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-location-dot text-gold-600 mt-0.5"></i>
+                                <span>Suite 5501, 55/F, Two IFC, 8 Finance Street, Central, Hong Kong</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <i class="fa-regular fa-clock text-gold-600 mt-0.5"></i>
+                                <span>Lunch: 12:00 - 14:30<br>Dinner: 18:00 - 22:30 (Tue - Sun)</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-phone text-gold-600 mt-0.5"></i>
+                                <span>+852 2888 9191 · concierge@leclat-hk.com</span>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button onclick="switchTab('location')" class="py-2 px-3 rounded-lg bg-stone-100 hover:bg-stone-200 text-obsidian text-xs font-medium transition-colors">
-                                <i class="fa-regular fa-map mr-1"></i> Map & Access
-                            </button>
-                            <button onclick="openInquiryModal()" class="py-2 px-3 rounded-lg bg-gold-50 hover:bg-gold-100 text-gold-700 text-xs font-medium transition-colors">
-                                <i class="fa-regular fa-envelope mr-1"></i> Direct Inquiry
-                            </button>
-                        </div>
+                        <button type="button" onclick="openInquiryModal()" class="w-full py-2.5 rounded-xl border border-stone-300 hover:border-obsidian text-obsidian text-xs font-medium transition-colors">
+                            <i class="fa-regular fa-envelope mr-1.5 text-gold-600"></i> Direct Concierge Inquiry
+                        </button>
                     </div>
 
                 </div>
             </div>
         </div>
 
-        <!-- ==================== TAB 2: Culinary Showcase (Pure Display of Signature Dishes, No Package Selection) ==================== -->
+        <!-- ==================== TAB 2: Culinary Showcase (Pure Display of Signature Dishes) ==================== -->
         <div id="tab-menu" class="hidden space-y-10">
             <div class="text-center max-w-2xl mx-auto space-y-2">
                 <span class="text-xs uppercase tracking-[0.25em] text-gold-600 font-semibold">Seasonal Gastronomy Showcase</span>
@@ -714,7 +708,7 @@
                 <p class="text-sm text-stone-500">An exhibition of our finest seasonal dishes crafted with air-flown French produce and artisanal ingredients.</p>
             </div>
 
-            <!-- Dish Category Sections (Purely Visual & Descriptive Showcase) -->
+            <!-- Dish Category Sections -->
             <div class="space-y-10">
                 
                 <!-- Category 1: Appetizers & Cold Starters -->
@@ -883,10 +877,7 @@
 
                 <!-- Right: Interactive Visual Map Panel -->
                 <div class="lg:col-span-7 bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 relative min-h-[420px] flex flex-col justify-between p-6 text-white">
-                    <!-- Decorative Map Grid Overlay -->
                     <div class="absolute inset-0 opacity-35 bg-[linear-gradient(to_right,#333_1px,transparent_1px),linear-gradient(to_bottom,#333_1px,transparent_1px)] bg-[size:36px_36px]"></div>
-                    
-                    <!-- Stylized Victoria Harbour Coastline SVG -->
                     <svg class="absolute inset-0 w-full h-full opacity-25 pointer-events-none" viewBox="0 0 800 500" fill="none">
                         <path d="M0 120 Q 250 180 450 100 T 800 150 L 800 0 L 0 0 Z" fill="#0284c7"/>
                         <path d="M100 320 L 700 220" stroke="#d0a361" stroke-width="2" stroke-dasharray="6 6"/>
@@ -903,7 +894,6 @@
                         </a>
                     </div>
 
-                    <!-- Center Map Pin Marker -->
                     <div class="relative z-10 my-auto mx-auto text-center">
                         <div class="inline-flex flex-col items-center">
                             <div class="bg-obsidian border-2 border-gold-400 px-4 py-2 rounded-xl shadow-2xl mb-2">
@@ -933,26 +923,45 @@
             </div>
         </div>
 
-        <!-- ==================== TAB 4: My Bookings CRUD Portal (Meets COMP3810SEF Requirements) ==================== -->
+        <!-- ==================== TAB 4: My Bookings (Customer) & Staff CRUD Portal ==================== -->
         <div id="tab-manage" class="hidden space-y-6">
             <div class="bg-white p-6 sm:p-8 rounded-2xl border border-stone-200/80 card-shadow space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-100 pb-5">
                     <div>
-                        <span class="text-xs uppercase tracking-[0.2em] text-gold-600 font-semibold">COMP3810SEF CRUD & RESTful Ready</span>
-                        <h2 class="font-luxury text-3xl font-semibold text-obsidian mt-0.5">Reservation Management (Read / Update / Delete)</h2>
-                        <p class="text-xs sm:text-sm text-stone-500 mt-1">Search reservations by ID, name, phone, or seating zone (Read), and modify (Update) or cancel (Delete) records</p>
+                        <span id="portal-role-badge" class="text-xs uppercase tracking-[0.2em] text-gold-600 font-semibold">Customer Lookup Mode</span>
+                        <h2 id="portal-title" class="font-luxury text-3xl font-semibold text-obsidian mt-0.5">Check My Reservations</h2>
+                        <p id="portal-subtitle" class="text-xs sm:text-sm text-stone-500 mt-1">Enter your mobile number to view your confirmed reservations, or sign in as Staff to manage all records.</p>
                     </div>
-                    <button onclick="switchTab('booking')" class="px-5 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium hover:bg-stone-800 transition-all shrink-0">
-                        <i class="fa-solid fa-plus mr-1.5 text-gold-400"></i> New Reservation (Create)
-                    </button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button id="portal-staff-btn" onclick="toggleLoginModal()" class="px-4 py-2.5 rounded-xl border border-gold-500 text-gold-700 hover:bg-gold-50 text-xs font-medium transition-all">
+                            <i class="fa-solid fa-user-shield mr-1.5"></i> Staff Login
+                        </button>
+                        <button onclick="switchTab('booking')" class="px-5 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium hover:bg-stone-800 transition-all">
+                            <i class="fa-solid fa-plus mr-1.5 text-gold-400"></i> New Reservation
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Search & Query Filter Bar (Read by Query Conditions) -->
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-xl border border-stone-200/70">
+                <!-- Customer Phone Search Bar (Visible when NOT logged in as Staff) -->
+                <div id="customer-lookup-bar" class="bg-gold-50/60 p-4 rounded-xl border border-gold-200/80">
+                    <form onsubmit="searchMyBookingsByMobile(event)" class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <i class="fa-solid fa-phone absolute left-3.5 top-3 text-gold-600 text-xs"></i>
+                            <input type="text" id="customer-mobile-search" placeholder="Enter your mobile number (e.g., 98765432 or +852 98765432)..." 
+                                class="w-full pl-9 pr-4 py-2.5 rounded-lg border border-stone-200 text-xs sm:text-sm outline-none focus:border-gold-600 bg-white">
+                        </div>
+                        <button type="submit" class="px-6 py-2.5 rounded-lg bg-obsidian hover:bg-stone-800 text-white text-xs font-medium transition-all shrink-0">
+                            <i class="fa-solid fa-magnifying-glass mr-1.5 text-gold-400"></i> Search My Bookings
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Staff Search & Query Filter Bar (Visible ONLY when logged in as Staff) -->
+                <div id="staff-filter-bar" class="hidden grid grid-cols-1 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-xl border border-stone-200/70">
                     <div class="sm:col-span-2">
                         <div class="relative">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-stone-400 text-xs"></i>
-                            <input type="text" id="crud-search-input" oninput="renderBookingsList()" placeholder="Search Booking ID (e.g. BK-89201), Name, or Phone..." 
+                            <input type="text" id="crud-search-input" oninput="renderBookingsList()" placeholder="Filter by Customer Name, Mobile, or Table..." 
                                 class="w-full pl-9 pr-4 py-2 rounded-lg border border-stone-200 text-xs sm:text-sm outline-none focus:border-gold-600 bg-white">
                         </div>
                     </div>
@@ -963,18 +972,19 @@
                             <option value="Main">Main Dining Booth</option>
                             <option value="Counter">Chef's Counter</option>
                             <option value="Terrace">Garden Terrace</option>
+                            <option value="Table">Standard Table</option>
                         </select>
                     </div>
                     <div>
                         <button onclick="resetCrudSearch()" class="w-full py-2 px-3 rounded-lg border border-stone-300 text-stone-600 hover:bg-white text-xs font-medium transition-all">
-                            Reset Filters
+                            Refresh / Reset
                         </button>
                     </div>
                 </div>
 
                 <!-- Bookings List Container -->
                 <div id="crud-bookings-container" class="space-y-4">
-                    <!-- Dynamically rendered by JavaScript -->
+                    <!-- Dynamically rendered from MongoDB -->
                 </div>
             </div>
         </div>
@@ -983,39 +993,40 @@
 
     <!-- ==================== MODAL 1: Dining Policy & Terms Modal (Must Agree Before Step 2) ==================== -->
     <div id="policy-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 border border-stone-200 shadow-2xl space-y-5 animate-fade-in">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 border border-stone-200 shadow-2xl space-y-5">
             <div class="flex items-center justify-between border-b border-stone-100 pb-4">
                 <div>
                     <span class="text-[10px] uppercase tracking-[0.2em] text-gold-600 font-semibold block">Dining Policy & Terms</span>
                     <h3 class="font-luxury text-2xl font-semibold text-obsidian">Reservation Guidelines & Dress Code</h3>
                 </div>
-                <button onclick="closePolicyModal()" class="text-stone-400 hover:text-obsidian p-1">
+                <button type="button" onclick="closePolicyModal()" class="text-stone-400 hover:text-obsidian p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs sm:text-sm text-stone-600 max-h-72 overflow-y-auto pr-2 leading-relaxed">
-                <div class="p-3 rounded-xl bg-gold-50/70 border border-gold-200 text-obsidian text-xs">
-                    <strong>Selected Slot:</strong> <span id="modal-policy-summary">2 Guests · 2026-11-20 Dinner 19:30 · Harbour View Window</span>
-                </div>
-                <p><strong>1. Deposit & Cancellation Policy:</strong><br>To secure your reservation and seasonal ingredients, a deposit is required (fully deductible from your final bill). Any cancellation or modification must be made at least <strong>24 hours prior</strong> to your reservation time; otherwise, the deposit will be forfeited.</p>
-                <p><strong>2. Table Holding Time:</strong><br>Your table will be held for <strong>15 minutes</strong> from the reserved time. Please contact our concierge if you anticipate arriving late.</p>
-                <p><strong>3. Dress Code:</strong><br>Our dress code is <strong>Smart Casual</strong>. Gentlemen are kindly requested to refrain from wearing sleeveless shirts, athletic shorts, or open-toed sandals.</p>
-                <p><strong>4. Corkage & Cake Cutting Fee:</strong><br>Corkage is HK$ 400 per 750ml bottle of wine/champagne. A cakeage fee of HK$ 250 applies for outside celebration cakes.</p>
-                <p><strong>5. Dietary Restrictions:</strong><br>Please indicate any food allergies or dietary requirements in the "Special Requests" box on the next page.</p>
+            <div class="bg-gold-50/70 border border-gold-200/80 rounded-xl p-3.5 text-xs text-stone-700">
+                <span class="font-semibold text-gold-700 block mb-0.5">Selected Reservation:</span>
+                <span id="modal-policy-summary">2 Guests · 2026-11-20 Dinner 19:30 · Harbour View Window (Table W1)</span>
             </div>
 
-            <label class="flex items-start gap-2.5 cursor-pointer pt-2 border-t border-stone-100">
-                <input type="checkbox" id="agree-policy-checkbox" onchange="togglePolicyConfirmBtn()" class="mt-1 w-4 h-4 accent-obsidian rounded">
-                <span class="text-xs text-stone-700 font-medium">I have read and agree to the reservation policies, dress code, and deposit terms above.</span>
+            <div class="space-y-3 text-xs sm:text-sm text-stone-600 max-h-56 overflow-y-auto pr-1 leading-relaxed">
+                <p><strong>1. Table Holding Time:</strong> Reservations are held for 15 minutes past the confirmed seating time. Please call our concierge if you anticipate any delay.</p>
+                <p><strong>2. Deposit & Cancellation Policy:</strong> The pre-authorized deposit is fully deducted from your final bill. Cancellations or rescheduling made at least 24 hours in advance receive a full refund.</p>
+                <p><strong>3. Dress Code:</strong> Smart Casual attire is required. Gentlemen are kindly asked to refrain from wearing sleeveless shirts, shorts, or open-toed footwear.</p>
+                <p><strong>4. Dietary & Corkage:</strong> Please notify us of any allergies in the next step. Outside wine corkage is HK$ 600 per 750ml bottle.</p>
+            </div>
+
+            <label class="flex items-start gap-3 cursor-pointer p-3 rounded-xl bg-stone-50 border border-stone-200">
+                <input type="checkbox" id="agree-policy-checkbox" onchange="togglePolicyConfirmBtn()" class="mt-0.5 w-4 h-4 accent-gold-600 rounded">
+                <span class="text-xs text-stone-700">I have read and agree to L'ÉCLAT's reservation guidelines, dress code, and 24-hour cancellation policy.</span>
             </label>
 
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="closePolicyModal()" class="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-600 text-xs font-medium hover:bg-stone-50">
-                    Back
+                    Cancel
                 </button>
-                <button type="button" id="confirm-policy-btn" onclick="proceedToStep2()" disabled class="px-6 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                    Agree & Continue →
+                <button type="button" id="policy-confirm-btn" onclick="confirmPolicyAndProceed()" disabled class="px-6 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium tracking-wider uppercase opacity-40 cursor-not-allowed transition-all">
+                    Agree & Continue
                 </button>
             </div>
         </div>
@@ -1023,107 +1034,98 @@
 
     <!-- ==================== MODAL 2: Concierge Inquiry Modal ==================== -->
     <div id="inquiry-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 border border-stone-200 shadow-2xl space-y-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-stone-200 shadow-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-stone-100 pb-3">
                 <h3 class="font-luxury text-2xl font-semibold text-obsidian">Contact Concierge</h3>
-                <button onclick="closeInquiryModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeInquiryModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="submitInquiry(event)" class="space-y-4 text-xs sm:text-sm">
+            <p class="text-xs text-stone-500">For parties of 9+, private dining rooms, or bespoke event inquiries, please leave a message below.</p>
+            <form onsubmit="submitInquiry(event)" class="space-y-3.5 text-xs sm:text-sm">
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Your Name *</label>
-                    <input type="text" required placeholder="e.g., Ms. Rachel Lam" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                    <input type="text" required placeholder="e.g., Alex Wong" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Email or WhatsApp Number *</label>
-                    <input type="text" required placeholder="+852 9123 4567 / email@domain.com" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                    <label class="block text-xs text-stone-500 mb-1">Email or Phone *</label>
+                    <input type="text" required placeholder="+852 9123 4567" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Inquiry Topic</label>
-                    <select class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none bg-white">
-                        <option>Private Dining Room (9+ Guests)</option>
-                        <option>Proposal / Anniversary Table Styling</option>
-                        <option>Corporate Buyout & Wine Reception</option>
-                        <option>Dietary & Allergen Consultation</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-stone-500 mb-1">Message *</label>
-                    <textarea rows="3" required placeholder="How may our concierge team assist you?" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600"></textarea>
+                    <label class="block text-xs text-stone-500 mb-1">Inquiry Details *</label>
+                    <textarea rows="3" required placeholder="Tell us about your event date, party size, or questions..." class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeInquiryModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 text-xs">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-obsidian text-white text-xs font-medium">Send Inquiry</button>
+                    <button type="button" onclick="closeInquiryModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-xs">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-obsidian hover:bg-stone-800 text-white text-xs font-medium">Send Inquiry</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ==================== MODAL 3: Edit Booking Modal (CRUD Update Function) ==================== -->
+    <!-- ==================== MODAL 3: Edit Booking Modal (Staff CRUD Update Function) ==================== -->
     <div id="edit-booking-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 border border-stone-200 shadow-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-stone-100 pb-3">
                 <h3 class="font-luxury text-2xl font-semibold text-obsidian">Modify Reservation (Update)</h3>
-                <button onclick="closeEditModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeEditModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="saveEditedBooking(event)" class="space-y-3.5 text-xs sm:text-sm">
                 <input type="hidden" id="edit-booking-id">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Dining Date</label>
-                        <input type="date" id="edit-date" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                        <label class="block text-xs text-stone-500 mb-1">Customer Name *</label>
+                        <input type="text" id="edit-customer-name" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
                     </div>
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Time Slot</label>
-                        <select id="edit-time" class="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white">
-                            <option value="Lunch 12:00">Lunch 12:00</option>
-                            <option value="Lunch 13:00">Lunch 13:00</option>
-                            <option value="Dinner 18:30">Dinner 18:30</option>
-                            <option value="Dinner 19:30">Dinner 19:30</option>
-                            <option value="Dinner 20:30">Dinner 20:30</option>
-                        </select>
+                        <label class="block text-xs text-stone-500 mb-1">Contact Mobile *</label>
+                        <input type="text" id="edit-phone" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Party Size</label>
-                        <input type="number" id="edit-guests" min="1" max="8" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                        <label class="block text-xs text-stone-500 mb-1">Date & Time *</label>
+                        <input type="text" id="edit-datetime" placeholder="2026-11-20 19:30" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
                     </div>
                     <div>
-                        <label class="block text-xs text-stone-500 mb-1">Contact Phone</label>
-                        <input type="text" id="edit-phone" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                        <label class="block text-xs text-stone-500 mb-1">Party Size *</label>
+                        <input type="number" id="edit-guests" min="1" max="20" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Special Requests</label>
+                    <label class="block text-xs text-stone-500 mb-1">Table / Seating Zone *</label>
+                    <input type="text" id="edit-table" required class="w-full px-3 py-2 rounded-xl border border-stone-200">
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Special Requests / Note</label>
                     <input type="text" id="edit-notes" class="w-full px-3 py-2 rounded-xl border border-stone-200">
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-xs">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-gold-600 text-white text-xs font-medium">Save Changes (PUT /update)</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-gold-600 hover:bg-gold-700 text-white text-xs font-medium">Save Changes (PUT)</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ==================== MODAL 4: Login / Logout Modal (Meets Course Authentication Requirement) ==================== -->
+    <!-- ==================== MODAL 4: Staff Login / Logout Modal (Connected to MongoDB users) ==================== -->
     <div id="login-modal" class="fixed inset-0 z-50 hidden bg-obsidian/70 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 border border-stone-200 shadow-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                <h3 class="font-luxury text-2xl font-semibold text-obsidian">Member Sign In / Switch User</h3>
-                <button onclick="toggleLoginModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="font-luxury text-2xl font-semibold text-obsidian">Staff Portal Authentication</h3>
+                <button type="button" onclick="toggleLoginModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            <p class="text-xs text-stone-500">Employees can sign in with their MongoDB staff credentials to view, update, and delete all reservations.</p>
             <form onsubmit="handleUserLogin(event)" class="space-y-3.5 text-xs sm:text-sm">
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Username / Email</label>
-                    <input type="text" id="login-username-input" value="David Chan (VIP)" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200">
+                    <label class="block text-xs text-stone-500 mb-1">Staff Username *</label>
+                    <input type="text" id="login-username-input" placeholder="Enter staff username" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div>
-                    <label class="block text-xs text-stone-500 mb-1">Password</label>
-                    <input type="password" value="••••••••" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200">
+                    <label class="block text-xs text-stone-500 mb-1">Password *</label>
+                    <input type="password" id="login-password-input" placeholder="Enter password" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div class="flex justify-between items-center pt-2">
-                    <button type="button" onclick="handleLogout()" class="text-xs text-red-600 hover:underline">Logout Current Session</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium">Sign In (Login)</button>
+                    <button type="button" id="modal-logout-btn" onclick="handleLogout()" class="hidden text-xs text-red-600 hover:underline font-medium">Logout Staff Session</button>
+                    <button type="submit" class="ml-auto px-5 py-2.5 rounded-xl bg-obsidian hover:bg-stone-800 text-white text-xs font-medium">Sign In</button>
                 </div>
             </form>
         </div>
@@ -1155,17 +1157,17 @@
         const bookingState = {
             guests: 2,
             date: '2026-11-20',
-            period: 'dinner', // 'lunch' or 'dinner'
+            period: 'dinner',
             time: '19:30',
             seatName: 'Harbour View Window (Table W1)',
             seatCode: 'window',
             depositPerPerson: 500,
             salutation: 'Mr.',
-            lastName: 'Chan',
-            firstName: 'David',
+            lastName: '',
+            firstName: '',
             countryCode: '+852',
-            phone: '98765432',
-            email: 'david.chan@example.com',
+            phone: '',
+            email: '',
             tags: [],
             notes: '',
             paymentMethod: 'card'
@@ -1176,44 +1178,20 @@
             dinner: ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30']
         };
 
-        // Pre-loaded sample reservations simulating MongoDB documents for CRUD demonstration
-        let savedBookings = [
-            {
-                id: 'BK-89201',
-                guestName: 'Mr. David Chan',
-                phone: '+852 98765432',
-                email: 'david.chan@example.com',
-                guests: 2,
-                date: '2026-11-20',
-                time: 'Dinner 19:30',
-                seat: 'Harbour View Window (Table W1)',
-                deposit: 1000,
-                notes: 'Anniversary · Complimentary dessert message "Happy Anniversary"'
-            },
-            {
-                id: 'BK-89155',
-                guestName: 'Miss Rachel Lam',
-                phone: '+852 61239988',
-                email: 'rachel.lam@example.com',
-                guests: 4,
-                date: '2026-11-25',
-                time: 'Lunch 12:30',
-                seat: 'Main Dining Booth (Table M3)',
-                deposit: 1200,
-                notes: 'Business Dining · Quiet corner table preferred'
-            }
-        ];
+        // Live reservations loaded from MongoDB via backend API
+        let savedBookings = [];
+        let staffSession = { authenticated: false, staffName: null };
 
         // ==================== Initialization on Window Load ====================
-        window.onload = function () {
+        window.onload = async function () {
             document.getElementById('booking-date').value = bookingState.date;
             renderGuestButtons();
             renderTimeSlots();
             updateSummary();
-            renderBookingsList();
+            await checkStaffStatus();
         };
 
-        // Render party size buttons (1 to 8 guests)
+        // Render party size buttons (1 - 8 guests)
         function renderGuestButtons() {
             const container = document.getElementById('guest-selector');
             container.innerHTML = '';
@@ -1227,9 +1205,9 @@
                     updateSummary();
                 };
                 btn.className = isSelected
-                    ? 'py-3 rounded-xl font-semibold text-xs sm:text-sm bg-obsidian text-gold-300 border-2 border-obsidian shadow-sm transition-all'
-                    : 'py-3 rounded-xl font-medium text-xs sm:text-sm bg-stone-50 text-stone-700 border border-stone-200 hover:border-gold-500 transition-all';
-                btn.innerText = i === 1 ? '1 Guest' : `${i} Guests`;
+                    ? 'py-2.5 rounded-xl text-sm font-semibold bg-obsidian text-gold-300 border border-obsidian shadow-sm transition-all'
+                    : 'py-2.5 rounded-xl text-sm font-medium bg-stone-50 text-stone-700 border border-stone-200 hover:border-gold-500 transition-all';
+                btn.innerText = i;
                 container.appendChild(btn);
             }
         }
@@ -1278,6 +1256,7 @@
 
             ['window', 'main', 'counter', 'terrace'].forEach(c => {
                 const card = document.getElementById(`seat-card-${c}`);
+                if (!card) return;
                 if (c === code) {
                     card.className = 'seat-option cursor-pointer p-3.5 rounded-xl border border-gold-500 bg-gold-500/15 transition-all text-left flex flex-col justify-between';
                 } else {
@@ -1306,43 +1285,43 @@
             const salutationEl = document.querySelector('input[name="salutation"]:checked');
             if (salutationEl) bookingState.salutation = salutationEl.value;
 
-            bookingState.lastName = document.getElementById('guest-lastname')?.value || 'Chan';
-            bookingState.firstName = document.getElementById('guest-firstname')?.value || 'David';
+            bookingState.lastName = (document.getElementById('guest-lastname')?.value || '').trim();
+            bookingState.firstName = (document.getElementById('guest-firstname')?.value || '').trim();
             bookingState.countryCode = document.getElementById('guest-country-code')?.value || '+852';
-            bookingState.phone = document.getElementById('guest-phone')?.value || '98765432';
-            bookingState.email = document.getElementById('guest-email')?.value || 'david.chan@example.com';
-            bookingState.notes = document.getElementById('guest-notes')?.value || '';
+            bookingState.phone = (document.getElementById('guest-phone')?.value || '').trim();
+            bookingState.email = (document.getElementById('guest-email')?.value || '').trim();
+            bookingState.notes = (document.getElementById('guest-notes')?.value || '').trim();
 
             const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
             const totalDeposit = bookingState.guests * bookingState.depositPerPerson;
-            const fullName = `${bookingState.salutation} ${bookingState.firstName} ${bookingState.lastName}`;
-            const fullPhone = `${bookingState.countryCode} ${bookingState.phone}`;
-            const combinedNotes = [
-                ...bookingState.tags,
-                bookingState.notes
-            ].filter(Boolean).join(' · ') || 'No special requests';
-
+            const hasName = bookingState.firstName || bookingState.lastName;
+            const fullName = hasName ? `${bookingState.salutation} ${bookingState.firstName} ${bookingState.lastName}`.trim() : '';
+            const fullPhone = bookingState.phone ? `${bookingState.countryCode} ${bookingState.phone}` : '';
+            const combinedNotes = [...bookingState.tags, bookingState.notes].filter(Boolean).join(' · ') || 'No special requests';
             const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
 
             // Update Right Sidebar Summary
             document.getElementById('summary-guests').innerText = guestLabel;
             document.getElementById('summary-datetime').innerText = `${bookingState.date} · ${periodLabel} ${bookingState.time}`;
             document.getElementById('summary-seat').innerText = bookingState.seatName;
-            document.getElementById('summary-guest-name').innerText = `${fullName} (${fullPhone})`;
+            document.getElementById('summary-guest-name').innerText =
+                hasName || fullPhone
+                    ? `${fullName || 'Guest'}${fullPhone ? ` (${fullPhone})` : ''}`
+                    : 'Not entered yet';
             document.getElementById('summary-deposit-calc').innerText = `HK$ ${bookingState.depositPerPerson} x ${guestLabel}`;
             document.getElementById('summary-total').innerText = `HK$ ${totalDeposit.toLocaleString()}`;
 
             // Update Step 3 Verification Card
-            document.getElementById('review-name').innerText = fullName;
-            document.getElementById('review-phone').innerText = fullPhone;
-            document.getElementById('review-email').innerText = bookingState.email;
+            document.getElementById('review-name').innerText = fullName || '-';
+            document.getElementById('review-phone').innerText = fullPhone || '-';
+            document.getElementById('review-email').innerText = bookingState.email || '-';
             document.getElementById('review-seat').innerText = `${guestLabel} · ${bookingState.seatName}`;
             document.getElementById('review-datetime').innerText = `${bookingState.date} · ${periodLabel} ${bookingState.time}`;
             document.getElementById('review-notes').innerText = combinedNotes;
             document.getElementById('payment-total-display').innerText = `HK$ ${totalDeposit.toLocaleString()}`;
         }
 
-        // Open Dining Policy Modal before allowing entry to Step 2
+        // ==================== Multi-Step Navigation & Policy Modal ====================
         function openPolicyModal() {
             const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
             const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
@@ -1356,51 +1335,48 @@
         }
 
         function togglePolicyConfirmBtn() {
-            const checked = document.getElementById('agree-policy-checkbox').checked;
-            document.getElementById('confirm-policy-btn').disabled = !checked;
+            const isChecked = document.getElementById('agree-policy-checkbox').checked;
+            const btn = document.getElementById('policy-confirm-btn');
+            btn.disabled = !isChecked;
+            if (isChecked) {
+                btn.className = 'px-6 py-2.5 rounded-xl bg-obsidian hover:bg-stone-800 text-white text-xs font-medium tracking-wider uppercase cursor-pointer transition-all';
+            } else {
+                btn.className = 'px-6 py-2.5 rounded-xl bg-obsidian text-white text-xs font-medium tracking-wider uppercase opacity-40 cursor-not-allowed transition-all';
+            }
         }
 
-        function proceedToStep2() {
+        function confirmPolicyAndProceed() {
             closePolicyModal();
             goToStep(2);
         }
 
-        // Handle Step 2 Form Submission -> Advance to Step 3 Payment
+        function goToStep(stepNumber) {
+            [1, 2, 3, 4].forEach(n => {
+                document.getElementById(`booking-step-${n}`).classList.add('hidden');
+                const ind = document.getElementById(`step-ind-${n}`);
+                if (n <= stepNumber) {
+                    ind.className = 'border-t-2 border-gold-600 pt-3 transition-all';
+                    ind.querySelector('span:first-child').className = 'text-[11px] uppercase tracking-widest text-gold-600 font-semibold block';
+                    ind.querySelector('span:last-child').className = 'text-xs sm:text-sm font-medium text-obsidian mt-0.5 block';
+                } else {
+                    ind.className = 'border-t-2 border-stone-200 pt-3 transition-all';
+                    ind.querySelector('span:first-child').className = 'text-[11px] uppercase tracking-widest text-stone-400 font-semibold block';
+                    ind.querySelector('span:last-child').className = 'text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block';
+                }
+            });
+            document.getElementById(`booking-step-${stepNumber}`).classList.remove('hidden');
+            window.scrollTo({ top: 150, behavior: 'smooth' });
+        }
+
         function handleStep2Submit(e) {
             e.preventDefault();
             updateSummary();
             goToStep(3);
         }
 
-        // Navigate between booking steps (1 to 4)
-        function goToStep(stepNumber) {
-            for (let i = 1; i <= 4; i++) {
-                const panel = document.getElementById(`booking-step-${i}`);
-                const indicator = document.getElementById(`step-ind-${i}`);
-                if (i === stepNumber) {
-                    panel.classList.remove('hidden');
-                } else {
-                    panel.classList.add('hidden');
-                }
-
-                if (i <= stepNumber) {
-                    indicator.className = 'border-t-2 border-gold-600 pt-3 transition-all';
-                    indicator.children[0].className = 'text-[11px] uppercase tracking-widest text-gold-600 font-semibold block';
-                    indicator.children[1].className = 'text-xs sm:text-sm font-semibold text-obsidian mt-0.5 block';
-                } else {
-                    indicator.className = 'border-t-2 border-stone-200 pt-3 transition-all';
-                    indicator.children[0].className = 'text-[11px] uppercase tracking-widest text-stone-400 font-semibold block';
-                    indicator.children[1].className = 'text-xs sm:text-sm font-medium text-stone-400 mt-0.5 block';
-                }
-            }
-            window.scrollTo({ top: 120, behavior: 'smooth' });
-        }
-
-        // Switch payment methods in Step 3
         function selectPaymentMethod(method) {
             bookingState.paymentMethod = method;
-            const methods = ['card', 'applepay', 'alipay'];
-            methods.forEach(m => {
+            ['card', 'applepay', 'alipay'].forEach(m => {
                 const btn = document.getElementById(`pay-method-${m}`);
                 if (m === method) {
                     btn.className = 'p-3.5 rounded-xl border-2 border-obsidian bg-stone-900 text-white text-xs font-medium flex items-center justify-center gap-2 transition-all';
@@ -1408,19 +1384,18 @@
                     btn.className = 'p-3.5 rounded-xl border border-stone-200 text-stone-700 hover:border-stone-400 text-xs font-medium flex items-center justify-center gap-2 transition-all';
                 }
             });
-
-            if (method === 'card') {
-                document.getElementById('payment-card-form').classList.remove('hidden');
-                document.getElementById('payment-qr-form').classList.add('hidden');
-            } else {
-                document.getElementById('payment-card-form').classList.add('hidden');
-                document.getElementById('payment-qr-form').classList.remove('hidden');
-            }
+            document.getElementById('payment-card-form').classList.toggle('hidden', method !== 'card');
+            document.getElementById('payment-qr-form').classList.toggle('hidden', method === 'card');
         }
 
-        // Finalize payment, insert record into CRUD array, and display confirmation email preview
-        function completePaymentAndSendEmail() {
+        // Finalize payment, POST reservation to MongoDB via /api/reservations, and display confirmation email preview
+        async function completePaymentAndSendEmail() {
             updateSummary();
+            const payBtn = document.getElementById('pay-submit-btn');
+            const originalBtnHtml = payBtn.innerHTML;
+            payBtn.disabled = true;
+            payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Saving to MongoDB...</span>';
+
             const newId = 'BK-' + Math.floor(10000 + Math.random() * 90000);
             const periodLabel = bookingState.period === 'lunch' ? 'Lunch' : 'Dinner';
             const totalDeposit = bookingState.guests * bookingState.depositPerPerson;
@@ -1429,34 +1404,53 @@
             const combinedNotes = [...bookingState.tags, bookingState.notes].filter(Boolean).join(' · ') || 'No special requests';
             const guestLabel = bookingState.guests === 1 ? '1 Guest' : `${bookingState.guests} Guests`;
 
-            // Insert new booking record into CRUD state
-            savedBookings.unshift({
-                id: newId,
-                guestName: fullName,
-                phone: fullPhone,
+            const reservationPayload = {
+                bookingRef: newId,
+                customerName: fullName,
+                mobile: fullPhone,
                 email: bookingState.email,
-                guests: bookingState.guests,
-                date: bookingState.date,
-                time: `${periodLabel} ${bookingState.time}`,
-                seat: bookingState.seatName,
+                reserveDateTime: `${bookingState.date} ${bookingState.time}`,
+                peopleCount: Number(bookingState.guests),
+                tableNo: bookingState.seatName,
                 deposit: totalDeposit,
-                notes: combinedNotes
-            });
+                note: combinedNotes
+            };
 
-            renderBookingsList();
+            try {
+                const response = await fetch('/api/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reservationPayload)
+                });
 
-            // Populate Step 4 Email Notification Preview
-            document.getElementById('confirmed-booking-id').innerText = newId;
-            document.getElementById('email-preview-id').innerText = newId;
-            document.getElementById('email-preview-to').innerText = bookingState.email;
-            document.getElementById('email-preview-guest').innerText = fullName;
-            document.getElementById('email-preview-datetime').innerText = `${bookingState.date} ${periodLabel} at ${bookingState.time}`;
-            document.getElementById('email-preview-seat').innerText = `${guestLabel} · ${bookingState.seatName}`;
-            document.getElementById('email-preview-deposit').innerText = `HK$ ${totalDeposit.toLocaleString()} (Deposit Authorized)`;
-            document.getElementById('email-preview-notes').innerText = combinedNotes;
+                if (!response.ok) throw new Error('Failed to save reservation');
 
-            goToStep(4);
-            showToast(`Reservation confirmed! Email sent to ${bookingState.email}`);
+                if (staffSession.authenticated) {
+                    await fetchAllReservationsFromDB();
+                } else {
+                    document.getElementById('customer-mobile-search').value = fullPhone;
+                    await searchMyBookingsByMobile();
+                }
+
+                // Populate Step 4 Email Notification Preview
+                document.getElementById('confirmed-booking-id').innerText = newId;
+                document.getElementById('email-preview-id').innerText = newId;
+                document.getElementById('email-preview-to').innerText = bookingState.email;
+                document.getElementById('email-preview-guest').innerText = fullName;
+                document.getElementById('email-preview-datetime').innerText = `${bookingState.date} ${periodLabel} at ${bookingState.time}`;
+                document.getElementById('email-preview-seat').innerText = `${guestLabel} · ${bookingState.seatName}`;
+                document.getElementById('email-preview-deposit').innerText = `HK$ ${totalDeposit.toLocaleString()} (Deposit Authorized)`;
+                document.getElementById('email-preview-notes').innerText = combinedNotes;
+
+                goToStep(4);
+                showToast(`Reservation saved to MongoDB! Confirmation sent to ${bookingState.email}`);
+            } catch (err) {
+                console.error(err);
+                showToast('Error saving reservation to database. Please try again.');
+            } finally {
+                payBtn.disabled = false;
+                payBtn.innerHTML = originalBtnHtml;
+            }
         }
 
         function resendEmailToast() {
@@ -1466,6 +1460,12 @@
         function resetBookingFlow() {
             document.getElementById('agree-policy-checkbox').checked = false;
             togglePolicyConfirmBtn();
+            document.getElementById('guest-info-form').reset();
+            bookingState.tags = [];
+            document.querySelectorAll('.tag-btn').forEach(btn => {
+                btn.className = 'tag-btn text-xs px-3 py-1.5 rounded-full border border-stone-200 text-stone-600 hover:border-gold-500 transition-all';
+            });
+            updateSummary();
             goToStep(1);
         }
 
@@ -1491,74 +1491,191 @@
             document.getElementById('mobile-menu').classList.toggle('hidden');
         }
 
-        // ==================== CRUD Booking Management Functions (Read / Update / Delete) ====================
+        // ==================== Staff Session & MongoDB CRUD Functions ====================
+        async function checkStaffStatus() {
+            try {
+                const res = await fetch('/api/staff/status');
+                const data = await res.json();
+                staffSession = data;
+                updateAuthUI();
+                if (staffSession.authenticated) {
+                    await fetchAllReservationsFromDB();
+                } else {
+                    renderBookingsList();
+                }
+            } catch (err) {
+                console.error('Failed to check staff session:', err);
+                renderBookingsList();
+            }
+        }
+
+        function updateAuthUI() {
+            const usernameEl = document.getElementById('current-username');
+            const dotEl = document.getElementById('auth-status-dot');
+            const iconEl = document.getElementById('auth-status-icon');
+            const logoutBtn = document.getElementById('modal-logout-btn');
+            const customerBar = document.getElementById('customer-lookup-bar');
+            const staffBar = document.getElementById('staff-filter-bar');
+            const roleBadge = document.getElementById('portal-role-badge');
+            const portalTitle = document.getElementById('portal-title');
+            const portalSubtitle = document.getElementById('portal-subtitle');
+            const staffBtn = document.getElementById('portal-staff-btn');
+
+            if (staffSession.authenticated) {
+                usernameEl.innerText = `Staff: ${staffSession.staffName}`;
+                dotEl.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                iconEl.className = 'fa-solid fa-arrow-right-from-bracket text-xs text-stone-400';
+                logoutBtn.classList.remove('hidden');
+                customerBar.classList.add('hidden');
+                staffBar.classList.remove('hidden');
+                roleBadge.innerText = `Staff Admin Mode · Signed in as ${staffSession.staffName}`;
+                portalTitle.innerText = 'All Reservations Management (CRUD)';
+                portalSubtitle.innerText = 'Connected to MongoDB: View, filter, modify (PUT), and cancel (DELETE) all customer reservations.';
+                staffBtn.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Staff Logout';
+            } else {
+                usernameEl.innerText = 'Staff Login';
+                dotEl.className = 'w-2 h-2 rounded-full bg-stone-400';
+                iconEl.className = 'fa-solid fa-right-to-bracket text-xs text-stone-400';
+                logoutBtn.classList.add('hidden');
+                customerBar.classList.remove('hidden');
+                staffBar.classList.add('hidden');
+                roleBadge.innerText = 'Customer Lookup Mode (No Login Required)';
+                portalTitle.innerText = 'Check My Reservations';
+                portalSubtitle.innerText = 'Enter your mobile number below to retrieve your bookings from MongoDB, or sign in as Staff to manage all records.';
+                staffBtn.innerHTML = '<i class="fa-solid fa-user-shield mr-1.5"></i> Staff Login';
+            }
+        }
+
+        async function fetchAllReservationsFromDB() {
+            try {
+                const res = await fetch('/api/reservations');
+                if (!res.ok) throw new Error('Failed to load reservations');
+                savedBookings = await res.json();
+                renderBookingsList();
+            } catch (err) {
+                console.error(err);
+                showToast('Could not load reservations from server.');
+            }
+        }
+
+        async function searchMyBookingsByMobile(e) {
+            if (e) e.preventDefault();
+            const mobile = document.getElementById('customer-mobile-search').value.trim();
+            if (!mobile) {
+                showToast('Please enter a mobile number to search.');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/my-bookings?mobile=${encodeURIComponent(mobile)}`);
+                if (!res.ok) throw new Error('Search failed');
+                savedBookings = await res.json();
+                renderBookingsList();
+                if (savedBookings.length === 0) {
+                    showToast(`No bookings found for ${mobile}`);
+                } else {
+                    showToast(`Found ${savedBookings.length} booking(s) for ${mobile}`);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error searching bookings.');
+            }
+        }
+
         function renderBookingsList() {
             const container = document.getElementById('crud-bookings-container');
             const badge = document.getElementById('booking-count-badge');
             badge.innerText = savedBookings.length;
 
-            const keyword = (document.getElementById('crud-search-input')?.value || '').toLowerCase();
-            const seatFilter = document.getElementById('crud-filter-seat')?.value || 'all';
+            const keyword = staffSession.authenticated
+                ? (document.getElementById('crud-search-input')?.value || '').toLowerCase()
+                : '';
+            const seatFilter = staffSession.authenticated
+                ? (document.getElementById('crud-filter-seat')?.value || 'all')
+                : 'all';
 
             const filtered = savedBookings.filter(b => {
-                const matchKeyword = b.id.toLowerCase().includes(keyword) ||
-                    b.guestName.toLowerCase().includes(keyword) ||
-                    b.phone.toLowerCase().includes(keyword);
-                const matchSeat = seatFilter === 'all' || b.seat.includes(seatFilter);
+                const name = (b.customerName || '').toLowerCase();
+                const phone = (b.mobile || '').toLowerCase();
+                const table = (b.tableNo || '').toLowerCase();
+                const ref = (b.bookingRef || b._id || '').toLowerCase();
+                const matchKeyword = !keyword || name.includes(keyword) || phone.includes(keyword) || table.includes(keyword) || ref.includes(keyword);
+                const matchSeat = seatFilter === 'all' || (b.tableNo || '').includes(seatFilter);
                 return matchKeyword && matchSeat;
             });
 
             if (filtered.length === 0) {
+                const emptyText = staffSession.authenticated
+                    ? 'No matching reservation records found in MongoDB.'
+                    : 'Enter your mobile number above to look up your reservations.';
                 container.innerHTML = `
                     <div class="text-center py-12 bg-stone-50 rounded-2xl border border-stone-200/60 text-stone-400 text-sm">
-                        No matching reservation records found.
+                        ${emptyText}
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = filtered.map(b => `
-                <div class="p-5 rounded-2xl border border-stone-200 hover:border-gold-400 bg-white transition-all flex flex-col md:flex-row justify-between gap-4">
-                    <div class="space-y-1.5">
-                        <div class="flex items-center gap-2.5">
-                            <span class="font-mono text-xs font-bold bg-obsidian text-gold-300 px-2.5 py-1 rounded">${b.id}</span>
-                            <span class="font-semibold text-obsidian text-base">${b.guestName}</span>
-                            <span class="text-xs text-stone-500">${b.phone}</span>
-                        </div>
-                        <div class="text-xs sm:text-sm text-stone-700 font-medium">
-                            <i class="fa-regular fa-calendar text-gold-600 mr-1"></i> ${b.date} · ${b.time} &nbsp;|&nbsp;
-                            <i class="fa-solid fa-chair text-gold-600 mr-1"></i> ${b.guests} Guests · ${b.seat}
-                        </div>
-                        <div class="text-xs text-stone-500">
-                            <strong>Notes:</strong> ${b.notes} · <strong class="text-emerald-700">Deposit Paid: HK$ ${b.deposit}</strong>
-                        </div>
-                    </div>
+            container.innerHTML = filtered.map(b => {
+                const displayRef = b.bookingRef || (b._id ? `#${b._id.slice(-6).toUpperCase()}` : 'BOOKING');
+                const staffActions = staffSession.authenticated ? `
                     <div class="flex items-center gap-2 shrink-0">
-                        <button onclick="openEditModal('${b.id}')" class="px-4 py-2 rounded-xl border border-stone-200 hover:border-obsidian text-xs font-medium text-obsidian transition-colors">
+                        <button onclick="openEditModal('${b._id}')" class="px-4 py-2 rounded-xl border border-stone-200 hover:border-obsidian text-xs font-medium text-obsidian transition-colors">
                             <i class="fa-regular fa-pen-to-square mr-1"></i> Modify (Update)
                         </button>
-                        <button onclick="deleteBooking('${b.id}')" class="px-4 py-2 rounded-xl border border-red-200 hover:bg-red-50 text-xs font-medium text-red-600 transition-colors">
+                        <button onclick="deleteBooking('${b._id}')" class="px-4 py-2 rounded-xl border border-red-200 hover:bg-red-50 text-xs font-medium text-red-600 transition-colors">
                             <i class="fa-regular fa-trash-can mr-1"></i> Cancel (Delete)
                         </button>
                     </div>
-                </div>
-            `).join('');
+                ` : `
+                    <div class="flex items-center shrink-0">
+                        <span class="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                            <i class="fa-solid fa-check mr-1"></i> Confirmed
+                        </span>
+                    </div>
+                `;
+
+                return `
+                    <div class="p-5 rounded-2xl border border-stone-200 hover:border-gold-400 bg-white transition-all flex flex-col md:flex-row justify-between gap-4">
+                        <div class="space-y-1.5">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <span class="font-mono text-xs font-bold bg-obsidian text-gold-300 px-2.5 py-1 rounded">${displayRef}</span>
+                                <span class="font-semibold text-obsidian text-base">${b.customerName || 'Guest'}</span>
+                                <span class="text-xs text-stone-500">${b.mobile || ''}</span>
+                            </div>
+                            <div class="text-xs sm:text-sm text-stone-700 font-medium">
+                                <i class="fa-regular fa-calendar text-gold-600 mr-1"></i> ${b.reserveDateTime || 'TBD'} &nbsp;|&nbsp;
+                                <i class="fa-solid fa-chair text-gold-600 mr-1"></i> ${b.peopleCount || 1} Guests · ${b.tableNo || 'Unassigned'}
+                            </div>
+                            <div class="text-xs text-stone-500">
+                                <strong>Notes:</strong> ${b.note || 'None'} ${b.deposit ? `· <strong class="text-emerald-700">Deposit: HK$ ${b.deposit}</strong>` : ''}
+                            </div>
+                        </div>
+                        ${staffActions}
+                    </div>
+                `;
+            }).join('');
         }
 
-        function resetCrudSearch() {
+        async function resetCrudSearch() {
             document.getElementById('crud-search-input').value = '';
             document.getElementById('crud-filter-seat').value = 'all';
-            renderBookingsList();
+            if (staffSession.authenticated) {
+                await fetchAllReservationsFromDB();
+            } else {
+                renderBookingsList();
+            }
         }
 
         function openEditModal(id) {
-            const target = savedBookings.find(b => b.id === id);
+            const target = savedBookings.find(b => b._id === id);
             if (!target) return;
-            document.getElementById('edit-booking-id').value = target.id;
-            document.getElementById('edit-date').value = target.date;
-            document.getElementById('edit-guests').value = target.guests;
-            document.getElementById('edit-phone').value = target.phone;
-            document.getElementById('edit-notes').value = target.notes;
+            document.getElementById('edit-booking-id').value = target._id;
+            document.getElementById('edit-customer-name').value = target.customerName || '';
+            document.getElementById('edit-phone').value = target.mobile || '';
+            document.getElementById('edit-datetime').value = target.reserveDateTime || '';
+            document.getElementById('edit-guests').value = target.peopleCount || 2;
+            document.getElementById('edit-table').value = target.tableNo || '';
+            document.getElementById('edit-notes').value = target.note || '';
             document.getElementById('edit-booking-modal').classList.remove('hidden');
         }
 
@@ -1566,35 +1683,55 @@
             document.getElementById('edit-booking-modal').classList.add('hidden');
         }
 
-        function saveEditedBooking(e) {
+        async function saveEditedBooking(e) {
             e.preventDefault();
             const id = document.getElementById('edit-booking-id').value;
-            const target = savedBookings.find(b => b.id === id);
-            if (target) {
-                target.date = document.getElementById('edit-date').value;
-                target.time = document.getElementById('edit-time').value;
-                target.guests = parseInt(document.getElementById('edit-guests').value, 10);
-                target.phone = document.getElementById('edit-phone').value;
-                target.notes = document.getElementById('edit-notes').value;
+            const updatePayload = {
+                customerName: document.getElementById('edit-customer-name').value,
+                mobile: document.getElementById('edit-phone').value,
+                reserveDateTime: document.getElementById('edit-datetime').value,
+                peopleCount: Number(document.getElementById('edit-guests').value),
+                tableNo: document.getElementById('edit-table').value,
+                note: document.getElementById('edit-notes').value
+            };
+
+            try {
+                const res = await fetch(`/api/reservations/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatePayload)
+                });
+                if (!res.ok) throw new Error('Update failed');
+                closeEditModal();
+                await fetchAllReservationsFromDB();
+                showToast('Reservation updated in MongoDB successfully!');
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update reservation.');
             }
-            closeEditModal();
-            renderBookingsList();
-            showToast(`Reservation ${id} updated successfully!`);
         }
 
-        function deleteBooking(id) {
-            savedBookings = savedBookings.filter(b => b.id !== id);
-            renderBookingsList();
-            showToast(`Reservation ${id} has been cancelled and removed.`);
+        async function deleteBooking(id) {
+            try {
+                const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Delete failed');
+                await fetchAllReservationsFromDB();
+                showToast('Reservation deleted from MongoDB.');
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete reservation.');
+            }
         }
 
-        // ==================== Concierge Inquiry & User Authentication Modals ====================
+        // ==================== Concierge Inquiry & Staff Authentication Modals ====================
         function openInquiryModal() {
             document.getElementById('inquiry-modal').classList.remove('hidden');
         }
+
         function closeInquiryModal() {
             document.getElementById('inquiry-modal').classList.add('hidden');
         }
+
         function submitInquiry(e) {
             e.preventDefault();
             closeInquiryModal();
@@ -1604,17 +1741,49 @@
         function toggleLoginModal() {
             document.getElementById('login-modal').classList.toggle('hidden');
         }
-        function handleUserLogin(e) {
+
+        async function handleUserLogin(e) {
             e.preventDefault();
-            const val = document.getElementById('login-username-input').value;
-            document.getElementById('current-username').innerText = val;
-            toggleLoginModal();
-            showToast(`Welcome back, ${val}`);
+            const username = document.getElementById('login-username-input').value.trim();
+            const password = document.getElementById('login-password-input').value;
+
+            try {
+                const res = await fetch('/api/staff/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    staffSession = { authenticated: true, staffName: data.staffName };
+                    updateAuthUI();
+                    toggleLoginModal();
+                    document.getElementById('login-password-input').value = '';
+                    await fetchAllReservationsFromDB();
+                    switchTab('manage');
+                    showToast(`Welcome back, Staff ${data.staffName}!`);
+                } else {
+                    showToast(data.message || 'Login failed. Please check username and password.');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Unable to reach login server.');
+            }
         }
-        function handleLogout() {
-            document.getElementById('current-username').innerText = 'Guest (Signed Out)';
-            toggleLoginModal();
-            showToast('You have been safely signed out.');
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/staff/logout', { method: 'POST' });
+                staffSession = { authenticated: false, staffName: null };
+                savedBookings = [];
+                updateAuthUI();
+                renderBookingsList();
+                toggleLoginModal();
+                showToast('Staff session logged out safely.');
+            } catch (err) {
+                console.error(err);
+                showToast('Logout failed.');
+            }
         }
 
         // ==================== Toast Notification Helper ====================
