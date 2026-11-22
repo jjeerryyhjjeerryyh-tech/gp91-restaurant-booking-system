@@ -27,7 +27,7 @@ const isStaff = (req, res, next) => {
 
 const getDb = () => client.db(dbName);
 
-// [Lecture 5] Database Operations
+//  Database Operations
 async function findUserByUsername(username) {
     return await getDb().collection('users').findOne({ username: username });
 }
