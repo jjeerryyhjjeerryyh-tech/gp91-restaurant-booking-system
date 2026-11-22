@@ -19,7 +19,8 @@ UI design of the webpage
 Members 3 (Wu Yu Han s1457322): 
 The theme design direction of the webpage
 
-Members 4 (Name): 
+Members 4 (Wong Hong Ching s1448094): 
+UI design of the webpage
 
 Members 5 (Name): 
 
