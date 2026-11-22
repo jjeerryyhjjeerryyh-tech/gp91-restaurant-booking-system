@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Cookie-Session for Staff Authentication
 app.use(session({
     name: 'session',
-    keys: ['secret-key-1', 'secret-key-2'],
+    keys: ['key1', 'key2'],
     maxAge: 24 * 60 * 60 * 1000
 }));
 
