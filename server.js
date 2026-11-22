@@ -140,7 +140,7 @@ app.get('/staff/delete/:id', isStaff, async (req, res) => {
 });
 
 // ==========================================
-// RESTful API (Lecture 8)
+// RESTful API 
 // ==========================================
 
 app.get('/api/reservations', async (req, res) => {
