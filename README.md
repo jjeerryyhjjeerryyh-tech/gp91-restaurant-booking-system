@@ -24,7 +24,7 @@ UI design of the webpage
 
 Members 5 (Chau Hung Hin s1320715): 
 
-Members 6 (Name): 
+Members 6 (Law Tin Chau s1428357): testing the system
 
 
 4. Technologies Used 
