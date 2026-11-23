@@ -24,7 +24,7 @@ UI design of the webpage
 
 Members 5 (Chau Hung Hin s1320715): Backend testing
 
-Members 6 (Law Tin Chau s1428357): testing the system
+Members 6 (Law Tin Chau s1428357): testing the system, some of restful api
 
 
 4. Technologies Used 
@@ -81,13 +81,36 @@ curl http://localhost:8099/api/reservations
 curl -X POST http://localhost:8099/api/reservations \
   -H "Content-Type: application/json" \
   -d '{"customerName":"Chan Tai Man","mobile":"91234567","reserveDateTime":"2026-12-20 19:00","peopleCount":4,"tableNo":"Table 7"}'
-
+  
+curl -X POST http://localhost:8099/api/reservations \
+  -H "Content-Type: application/json" \
+  -d '{"customerName":"LI Xiao Mei","mobile":"98765432","reserveDateTime":"2026-11-26 20:00","peopleCount":2,"tableNo":"T02","note":""}'
+  
  //Update the status
  
 curl -X PUT http://localhost:8099/api/reservations/<id> \
   -H "Content-Type: application/json" \
   -d '{"status":"Completed"}'
+  
+curl -X PUT http://localhost:8099/api/reservations/<id> \
+  -H "Content-Type: application/json" \
+  -d '{"peopleCount":3}'
 
+  curl -X PUT http://localhost:8099/api/reservations/<id> \
+  -H "Content-Type: application/json" \
+  -d '{"peopleCount":6,"note":"need child seat"}'
 //Delete
 
 curl -X DELETE http://localhost:8099/api/reservations/<id>
+
+// invalid Id format
+
+curl -i -X PUT http://localhost:8099/api/reservations/12345 \
+  -H "Content-Type: application/json" \
+  -d '{"peopleCount":2}'
+
+  // test invalid reservation status values
+  
+  curl -i -X PUT http://localhost:8099/api/reservations/你的ID/status \
+  -H "Content-Type: application/json" \
+  -d '{"status":"unknown_status"}'
