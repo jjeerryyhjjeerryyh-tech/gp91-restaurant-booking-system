@@ -955,6 +955,19 @@
                     </div>
                 </div>
 
+                <!-- GP91 CONCIERGE PATCH: Staff-only inquiry management -->
+                <section id="staff-inquiries" class="<%= staffAuthenticated ? '' : 'hidden' %> border-t border-stone-200 pt-6 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-luxury text-2xl font-semibold text-obsidian">Contact Concierge Inquiries</h3>
+                            <p class="text-xs text-stone-500">Customer messages · most recent first</p>
+                        </div>
+                        <button type="button" onclick="loadInquiries()" class="px-4 py-2 rounded-xl border border-gold-500 text-gold-700 hover:bg-gold-50 text-xs font-semibold">
+                            <i class="fa-solid fa-rotate mr-1"></i> Refresh Inquiries
+                        </button>
+                    </div>
+                    <div id="inquiries-list" class="space-y-3 text-sm text-stone-600">Loading inquiries...</div>
+                </section>
                 <!-- Customer Mobile Number Search Bar (Visible when NOT logged in as Staff) -->
                 <div id="customer-lookup-bar" class="<%= staffAuthenticated ? 'hidden' : '' %> bg-gold-50/60 p-4 rounded-xl border border-gold-200/80">
                     <form action="/my-bookings" method="GET" onsubmit="searchMyBookingsByMobile(event)" class="flex flex-col sm:flex-row gap-3">
@@ -1092,18 +1105,18 @@
                 <button type="button" onclick="closeInquiryModal()" class="text-stone-400 hover:text-obsidian"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <p class="text-xs text-stone-500">For parties of 9+, private dining rooms, or bespoke event inquiries, please leave a message below.</p>
-            <form onsubmit="submitInquiry(event)" class="space-y-3.5 text-xs sm:text-sm">
+            <form id="concierge-inquiry-form" onsubmit="submitInquiry(event)" class="space-y-3.5 text-xs sm:text-sm">
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Your Name *</label>
-                    <input type="text" required placeholder="e.g., Alex Wong" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                    <input type="text" id="inquiry-name" maxlength="100" required placeholder="e.g., Alex Wong" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Email or Phone *</label>
-                    <input type="text" required placeholder="+852 91234567" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
+                    <input type="text" id="inquiry-contact" maxlength="150" required placeholder="+852 91234567" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600">
                 </div>
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">Inquiry Details *</label>
-                    <textarea rows="3" required placeholder="Tell us about your event date, party size, or questions..." class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600"></textarea>
+                    <textarea id="inquiry-message" maxlength="3000" rows="3" required placeholder="Tell us about your event date, party size, or questions..." class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 outline-none focus:border-gold-600"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeInquiryModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-xs">Cancel</button>
@@ -1788,6 +1801,8 @@
                 portalSubtitle.innerText = 'Protected by isStaff session middleware: View, filter, modify (PUT), and delete (DELETE) all MongoDB reservations.';
                 staffBtn.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Staff Logout';
                 if (navManageLabel) navManageLabel.innerText = 'Staff Dashboard';
+                document.getElementById('staff-inquiries').classList.remove('hidden');
+                loadInquiries();
             } else {
                 usernameEl.innerText = 'Staff Login';
                 dotEl.className = 'w-2 h-2 rounded-full bg-stone-400';
@@ -1801,6 +1816,8 @@
                 portalSubtitle.innerText = 'Enter your mobile number below to retrieve your bookings from MongoDB, or sign in as Staff to manage all records.';
                 staffBtn.innerHTML = '<i class="fa-solid fa-user-shield mr-1.5"></i> Staff Login';
                 if (navManageLabel) navManageLabel.innerText = 'My Bookings / Staff';
+                document.getElementById('staff-inquiries').classList.add('hidden');
+                document.getElementById('inquiries-list').replaceChildren();
             }
         }
 
@@ -2037,10 +2054,97 @@
             document.getElementById('inquiry-modal').classList.add('hidden');
         }
 
-        function submitInquiry(e) {
+        // GP91 CONCIERGE PATCH: save to MongoDB before reporting success.
+        async function submitInquiry(e) {
             e.preventDefault();
-            closeInquiryModal();
-            showToast('Inquiry sent! Our concierge team will reply within 2 hours.');
+            const form = e.currentTarget;
+            const button = form.querySelector('[type="submit"]');
+            const payload = {
+                name: document.getElementById('inquiry-name').value.trim(),
+                contact: document.getElementById('inquiry-contact').value.trim(),
+                message: document.getElementById('inquiry-message').value.trim()
+            };
+            if (!payload.name || !payload.contact || !payload.message) {
+                showToast('Please complete all inquiry fields.', true);
+                return;
+            }
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/inquiries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Inquiry submission failed');
+                form.reset();
+                closeInquiryModal();
+                showToast('Inquiry sent to our concierge team!');
+                if (staffSession.authenticated) await loadInquiries();
+            } catch (err) {
+                console.error(err);
+                showToast('Could not submit inquiry. Please try again.', true);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function loadInquiries() {
+            const list = document.getElementById('inquiries-list');
+            if (!list || !staffSession.authenticated) return;
+            list.textContent = 'Loading inquiries...';
+            try {
+                const response = await fetch('/api/staff/inquiries');
+                if (!response.ok) throw new Error('Failed to load inquiries');
+                const inquiries = await response.json();
+                list.replaceChildren();
+                if (inquiries.length === 0) {
+                    list.textContent = 'No concierge inquiries yet.';
+                    return;
+                }
+                for (const inquiry of inquiries) {
+                    const card = document.createElement('article');
+                    card.className = 'rounded-xl bg-stone-50 border border-stone-200 p-4 space-y-2';
+                    const title = document.createElement('h4');
+                    title.className = 'font-semibold text-obsidian';
+                    title.textContent = inquiry.name || 'Unknown customer';
+                    const contact = document.createElement('p');
+                    contact.textContent = 'Contact: ' + (inquiry.contact || '-');
+                    const date = document.createElement('p');
+                    date.className = 'text-xs text-stone-500';
+                    date.textContent = 'Submitted: ' + (inquiry.createdAt ? new Date(inquiry.createdAt).toLocaleString() : '-');
+                    const message = document.createElement('p');
+                    message.className = 'whitespace-pre-wrap text-stone-700';
+                    message.textContent = inquiry.message || '';
+                    const status = document.createElement('p');
+                    status.className = 'text-xs font-semibold ' + (inquiry.status === 'Resolved' ? 'text-emerald-700' : 'text-amber-700');
+                    status.textContent = 'Status: ' + (inquiry.status || 'Pending');
+                    card.append(title, contact, date, message, status);
+                    if (inquiry.status !== 'Resolved') {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'px-4 py-2 rounded-xl bg-obsidian text-white text-xs hover:bg-stone-800';
+                        button.textContent = 'Mark as Resolved';
+                        button.addEventListener('click', () => resolveInquiry(inquiry._id));
+                        card.appendChild(button);
+                    }
+                    list.appendChild(card);
+                }
+            } catch (err) {
+                console.error(err);
+                list.textContent = 'Unable to load inquiries. Check staff login and server connection.';
+            }
+        }
+
+        async function resolveInquiry(id) {
+            try {
+                const response = await fetch('/api/staff/inquiries/' + encodeURIComponent(id), { method: 'PATCH' });
+                if (!response.ok) throw new Error('Unable to update inquiry');
+                await loadInquiries();
+                showToast('Inquiry marked as resolved.');
+            } catch (err) {
+                console.error(err);
+                showToast('Unable to update inquiry.', true);
+            }
         }
 
         function toggleLoginModal() {
