@@ -99,6 +99,7 @@ curl -X PUT http://localhost:8099/api/reservations/<id> \
   curl -X PUT http://localhost:8099/api/reservations/<id> \
   -H "Content-Type: application/json" \
   -d '{"peopleCount":6,"note":"need child seat"}'
+  
 //Delete
 
 curl -X DELETE http://localhost:8099/api/reservations/<id>
@@ -114,3 +115,4 @@ curl -i -X PUT http://localhost:8099/api/reservations/12345 \
   curl -i -X PUT http://localhost:8099/api/reservations/你的ID/status \
   -H "Content-Type: application/json" \
   -d '{"status":"unknown_status"}'
+
