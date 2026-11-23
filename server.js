@@ -408,6 +408,10 @@ app.delete('/api/reservations/:id', async (req, res) => {
     }
 });
 
+app.use((req, res) => {
+    res.status(404).send('404 Not Found');
+});
+
 // Start Server after MongoDB Connection
 client.connect().then(async () => {
     console.log("Connected to MongoDB successfully");
