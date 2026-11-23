@@ -27,7 +27,7 @@ Members 5 (Chau Hung Hin s1320715): Backend testing
 Members 6 (Law Tin Chau s1428357): testing the system, some of restful api
 
 
-4. Technologies Used 
+3. Technologies Used 
 Web Framework:
 Express.js
 
@@ -43,7 +43,7 @@ Cookie-Session
 Frontend:
 HTML, CSS
 
-6. Project File Structure
+4. Project File Structure
 
 gp91-restaurant-booking-system/
 
@@ -115,4 +115,5 @@ curl -i -X PUT http://localhost:8099/api/reservations/12345 \
   curl -i -X PUT http://localhost:8099/api/reservations/你的ID/status \
   -H "Content-Type: application/json" \
   -d '{"status":"unknown_status"}'
+
 
