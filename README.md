@@ -44,20 +44,33 @@ Frontend:
 HTML, CSS
 
 6. Project File Structure
+
 gp91-restaurant-booking-system/
-├── server.js           
+├── server.js
+
 ├── views/
-│   └── index.ejs       
-│                        
+
+│   └── index.ejs
+
+│
+
 ├── package.json
+
 ├── package-lock.json
+
 ├── README.md
+
 └── .gitignore
 
+
 7. Operation Guide
+
 1.npm start
+
 2.Open http://localhost:8099. The port can be overridden with the PORT environment variable.
+
 3.curl examples
+
 //List all reservations
 curl http://localhost:8099/api/reservations
 
