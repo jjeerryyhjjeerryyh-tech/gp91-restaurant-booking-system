@@ -46,6 +46,7 @@ HTML, CSS
 6. Project File Structure
 
 gp91-restaurant-booking-system/
+
 ├── server.js
 
 ├── views/
