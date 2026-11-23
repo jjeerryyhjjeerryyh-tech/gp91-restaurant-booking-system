@@ -22,7 +22,7 @@ The theme design direction of the webpage
 Members 4 (Wong Hong Ching s1448094): 
 UI design of the webpage
 
-Members 5 (Name): 
+Members 5 (Chau Hung Hin s1320715): 
 
 Members 6 (Name): 
 
