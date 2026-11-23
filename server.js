@@ -408,6 +408,63 @@ app.delete('/api/reservations/:id', async (req, res) => {
     }
 });
 
+// ==================== GP91 CONCIERGE PATCH: Inquiry API ====================
+// Public submission endpoint. Only the staff routes below expose saved inquiries.
+app.post('/api/inquiries', async (req, res) => {
+    try {
+        const { name, contact, message } = req.body || {};
+        if ([name, contact, message].some(v => typeof v !== 'string' || !v.trim()) ||
+            name.length > 100 || contact.length > 150 || message.length > 3000) {
+            return res.status(400).json({ success: false, message: 'Please provide valid name, contact and message.' });
+        }
+        await getDb().collection('inquiries').insertOne({
+            name: name.trim(),
+            contact: contact.trim(),
+            message: message.trim(),
+            status: 'Pending',
+            createdAt: new Date()
+        });
+        res.status(201).json({ success: true });
+    } catch (err) {
+        console.error('Inquiry submission error:', err);
+        res.status(500).json({ success: false, message: 'Could not save inquiry.' });
+    }
+});
+
+// Unlike the page-login middleware, API routes return JSON 401 (no HTML redirects).
+function requireStaffApi(req, res, next) {
+    if (req.session && req.session.staffAuthenticated) return next();
+    return res.status(401).json({ success: false, message: 'Staff login required.' });
+}
+
+app.get('/api/staff/inquiries', requireStaffApi, async (req, res) => {
+    try {
+        const inquiries = await getDb().collection('inquiries')
+            .find({}).sort({ createdAt: -1 }).limit(500).toArray();
+        res.json(inquiries);
+    } catch (err) {
+        console.error('Inquiry loading error:', err);
+        res.status(500).json({ success: false, message: 'Could not load inquiries.' });
+    }
+});
+
+app.patch('/api/staff/inquiries/:id', requireStaffApi, async (req, res) => {
+    try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) return res.status(400).json({ success: false, message: 'Invalid inquiry ID.' });
+        const result = await getDb().collection('inquiries').updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { status: 'Resolved', resolvedAt: new Date() } }
+        );
+        if (!result.matchedCount) return res.status(404).json({ success: false, message: 'Inquiry not found.' });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Inquiry update error:', err);
+        res.status(500).json({ success: false, message: 'Could not update inquiry.' });
+    }
+});
+// ==================== END GP91 CONCIERGE PATCH ====================
+
 app.use((req, res) => {
     res.status(404).send('404 Not Found');
 });
