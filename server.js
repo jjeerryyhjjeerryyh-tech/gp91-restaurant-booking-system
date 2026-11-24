@@ -462,12 +462,6 @@ app.patch('/api/staff/inquiries/:id', requireStaffApi, async (req, res) => {
         res.status(500).json({ success: false, message: 'Could not update inquiry.' });
     }
 });
-// ==================== END GP91 CONCIERGE PATCH ====================
-
-app.use((req, res) => {
-    res.status(404).send('404 Not Found');
-});
-
 // Start Server after MongoDB Connection
 client.connect().then(async () => {
     console.log("Connected to MongoDB successfully");
