@@ -63,8 +63,23 @@ gp91-restaurant-booking-system/
 
 └── .gitignore
 
+5.staff login guide
 
-7. Operation Guide
+1. npm start
+   
+2. login url http://localhost:8099/staff/login  (or click the "Staff Login" button on the homepage).
+   
+3. Test Account:
+   
+     Username: ‘staff01’
+     Password: ‘123456’
+   
+4.how to log out
+
+   Once logged in, you will be redirected to the dashboard. Click the "Logout" button (or visit ‘http://localhost:8099/staff/logout’) to clear the session.
+
+
+6. Operation Guide
 
 1.npm start
 
