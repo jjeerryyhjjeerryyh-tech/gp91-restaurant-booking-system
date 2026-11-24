@@ -8,7 +8,7 @@ const url = "mongodb+srv://hkmu:323911Abc@cluster0.wgy93zk.mongodb.net/";
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
 
-// Configure EJS as the view engine (renders files inside /views)
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -116,7 +116,7 @@ async function buildViewData(req, options = {}) {
 }
 
 // ==========================================
-// Customer Routes (Rendered via views/index.ejs)
+// Customer Routes
 // ==========================================
 
 // Homepage: Render views/index.ejs with live session & booking data
