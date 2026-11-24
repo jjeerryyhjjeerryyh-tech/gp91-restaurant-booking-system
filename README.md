@@ -11,7 +11,7 @@ This project is a restaurant reservation management system. Customers can make r
 2. Group Members & Roles 
 
 Members 1 (Li Tin Nok s13175440):
-Database & Backend Logic (MongoDB Driver, CRUD functions)
+Database & Backend Logic 
 
 Members 2 (Chen Hiu Chung - s1431291):
 Frontend UI & Booking/Payment page design
