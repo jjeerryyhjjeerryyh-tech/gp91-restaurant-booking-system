@@ -4,7 +4,6 @@ const path = require('path');
 const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
-// Paste your MongoDB Atlas connection string here
 const url = "mongodb+srv://hkmu:323911Abc@cluster0.wgy93zk.mongodb.net/";
 const client = new MongoClient(url);
 const dbName = 'restaurantDB';
